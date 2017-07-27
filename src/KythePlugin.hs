@@ -34,7 +34,16 @@ import System.FilePath
 import NameEnv
 import Data.Maybe
 import Debug.Trace
+import Control.Concurrent.MVar (MVar)
+import Control.Monad.Identity (runIdentity)
+import Control.Monad.Morph (lift, hoist)
+--import qualified Data.ByteString as B
+import Data.Conduit (($$), (=$=), await, awaitForever, yield, Conduit, Sink)
 
+import qualified Language.Kythe.Schema.Raw as Raw
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as BL
+import qualified Data.ByteString.Builder as Builder
 
 data Pos = Pos { _x :: Int, _y :: Int } deriving Show
 
@@ -80,6 +89,7 @@ doPrint outdir mgs@ModGuts{mg_binds, mg_module} = do
     let ((pprint, st), xrefs) = runRender outpath (render (sdoc ctx))
     liftIO $ T.putStrLn pprint
     liftIO $ putStrLn $ showXrefs xrefs (view nameMap st)
+    liftIO $ putStrLn (show (toXRef mg_module outpath xrefs (view nameMap st)))
     return mgs
 
 makeModulePath :: FilePath -> Module -> FilePath
@@ -115,8 +125,18 @@ pprASTBasic (Add l r) = parens (pprAST l) <+> "+"
 
 data XRefs = XRefs [Decl] (NameEnv Tick -> [TickReference])
 
-showXrefs :: XRefs -> NameEnv Tick -> String
+showXrefs ::  XRefs -> NameEnv Tick -> String
 showXrefs (XRefs ds nets)  ne = show (ds, nets ne)
+
+toXRef :: Module -> FilePath -> XRefs -> NameEnv Tick -> XRef
+toXRef mod fp (XRefs ds nets)  ne =
+    XRef { xrefFile      = makeAnalysedFile fp
+    , xrefModule    = makeModuleTick mod
+    , xrefDecls     = ds
+    , xrefCrossRefs = nets ne
+    , xrefRelations = []
+    , xrefImports   = []
+    }
 
 instance Monoid XRefs where
   mempty = XRefs [] (const [])
@@ -232,3 +252,24 @@ runRender fp = runIdentity . runWriterT . flip runStateT initialState
   where
     initialReader = OutputReader Nothing fp
 
+-- Final Conversion
+
+
+collect baseVName sourceText xref = do
+    -- Note: since this Conduit pipeline is pretty context-dependent, there
+    -- is low chance of leak due to accidental sharing (see
+    -- https://www.well-typed.com/blog/2016/09/sharing-conduit/).
+    hoist (return . runIdentity) (toKythe baseVName sourceText xref
+        -- Batch an ad-hoc number of entries to be emitted together.
+        =$= chunksOf 1000)
+        $$ sinkChunks
+    --
+  where
+    sinkChunks :: Sink [Raw.Entry] IO ()
+    sinkChunks = awaitForever (lift . sink)
+
+    sink = mapM_ (\m -> do
+        let wire = encodeMessage . Raw.toEntryProto $ m
+        B.putStr . BL.toStrict . Builder.toLazyByteString
+                 . varInt . B.length $ wire
+        B.putStr wire)
