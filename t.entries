@@ -1,92 +1,95 @@
+[1 of 1] Compiling T                ( T.hs, T.o ) [KythePlugin changed]
+
+
 ;
 "output-dir/T.core/kythe/edge/childof
 :*haskell"/)
 
 :*haskell"/kythe/node/kind*package-
-"output-dir/T.core"/kythe/node/kind*fileí
-"output-dir/T.core"/kythe/text*È
-"main"  "::" "IO" ()
-["LclIdX",
-"Unf=""Unf"{"Src=""<vanilla>",
-"TopLvl=""True",
-"Value=""False",
-"ConLike=""False",
-"WorkFree=""False",
-"Expandable=""False",
-"Guidance=""IF_ARGS" [] "130" 0
+"output-dir/T.core"/kythe/node/kind*file«	
+"output-dir/T.core"/kythe/text*†	
+main  :: IO ()
+[LclIdX,
+Unf=Unf{Src=<vanilla>,
+TopLvl=True,
+Value=False,
+ConLike=False,
+WorkFree=False,
+Expandable=False,
+Guidance=IF_ARGS [] 130 0
 }]
-"main"
-= "print"
-  @ "Integer" "$fShowInteger" 2
+main
+= print
+  @ Integer $fShowInteger 2
 
 
-"$trModule"_"s1t6"  "::" "Addr#"
-["LclId",
-"Unf=""Unf"{"Src=""<vanilla>",
-"TopLvl=""True",
-"Value=""True",
-"ConLike=""True",
-"WorkFree=""True",
-"Expandable=""True",
-"Guidance=""IF_ARGS" [] "20" 0
+$trModule_s1t6  :: Addr#
+[LclId,
+Unf=Unf{Src=<vanilla>,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=IF_ARGS [] 20 0
 }]
-"$trModule"_"s1t6" = "\"main\""#
+$trModule_s1t6 = "main"#
 
 
-"$trModule"_"s1t5"  "::" "TrName"
-["LclId",
-"Unf=""Unf"{"Src=""<vanilla>",
-"TopLvl=""True",
-"Value=""True",
-"ConLike=""True",
-"WorkFree=""True",
-"Expandable=""True",
-"Guidance=""IF_ARGS" [] "10" "20"
+$trModule_s1t5  :: TrName
+[LclId,
+Unf=Unf{Src=<vanilla>,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=IF_ARGS [] 10 20
 }]
-"$trModule"_"s1t5"
-= "TrNameS" "$trModule"_"s1t6"
+$trModule_s1t5
+= TrNameS $trModule_s1t6
 
 
-"$trModule"_"s1t8"  "::" "Addr#"
-["LclId",
-"Unf=""Unf"{"Src=""<vanilla>",
-"TopLvl=""True",
-"Value=""True",
-"ConLike=""True",
-"WorkFree=""True",
-"Expandable=""True",
-"Guidance=""IF_ARGS" [] "20" 0
+$trModule_s1t8  :: Addr#
+[LclId,
+Unf=Unf{Src=<vanilla>,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=IF_ARGS [] 20 0
 }]
-"$trModule"_"s1t8" = "\"T\""#
+$trModule_s1t8 = "T"#
 
 
-"$trModule"_"s1t7"  "::" "TrName"
-["LclId",
-"Unf=""Unf"{"Src=""<vanilla>",
-"TopLvl=""True",
-"Value=""True",
-"ConLike=""True",
-"WorkFree=""True",
-"Expandable=""True",
-"Guidance=""IF_ARGS" [] "10" "20"
+$trModule_s1t7  :: TrName
+[LclId,
+Unf=Unf{Src=<vanilla>,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=IF_ARGS [] 10 20
 }]
-"$trModule"_"s1t7"
-= "TrNameS" "$trModule"_"s1t8"
+$trModule_s1t7
+= TrNameS $trModule_s1t8
 
 
-"$trModule"  "::" "Module"
-["LclIdX",
-"Unf=""Unf"{"Src=""<vanilla>",
-"TopLvl=""True",
-"Value=""True",
-"ConLike=""True",
-"WorkFree=""True",
-"Expandable=""True",
-"Guidance=""IF_ARGS" [] "10" "30"
+$trModule  :: Module
+[LclIdX,
+Unf=Unf{Src=<vanilla>,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=IF_ARGS [] 10 30
 }]
-"$trModule"
-= "Module"
-  "$trModule"_"s1t5" "$trModule"_"s1t7"
+$trModule
+= Module
+  $trModule_s1t5 $trModule_s1t7
 7
 
 ::ImplicitAnchor*haskell"/kythe/node/kind*anchor7
