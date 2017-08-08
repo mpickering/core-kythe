@@ -1,0 +1,237 @@
+;
+"output-dir/T.core/kythe/edge/childof
+:*haskell"/)
+
+:*haskell"/kythe/node/kind*package-
+"output-dir/T.core"/kythe/node/kind*fileí
+"output-dir/T.core"/kythe/text*È
+"main"  "::" "IO" ()
+["LclIdX",
+"Unf=""Unf"{"Src=""<vanilla>",
+"TopLvl=""True",
+"Value=""False",
+"ConLike=""False",
+"WorkFree=""False",
+"Expandable=""False",
+"Guidance=""IF_ARGS" [] "130" 0
+}]
+"main"
+= "print"
+  @ "Integer" "$fShowInteger" 2
+
+
+"$trModule"_"s1t6"  "::" "Addr#"
+["LclId",
+"Unf=""Unf"{"Src=""<vanilla>",
+"TopLvl=""True",
+"Value=""True",
+"ConLike=""True",
+"WorkFree=""True",
+"Expandable=""True",
+"Guidance=""IF_ARGS" [] "20" 0
+}]
+"$trModule"_"s1t6" = "\"main\""#
+
+
+"$trModule"_"s1t5"  "::" "TrName"
+["LclId",
+"Unf=""Unf"{"Src=""<vanilla>",
+"TopLvl=""True",
+"Value=""True",
+"ConLike=""True",
+"WorkFree=""True",
+"Expandable=""True",
+"Guidance=""IF_ARGS" [] "10" "20"
+}]
+"$trModule"_"s1t5"
+= "TrNameS" "$trModule"_"s1t6"
+
+
+"$trModule"_"s1t8"  "::" "Addr#"
+["LclId",
+"Unf=""Unf"{"Src=""<vanilla>",
+"TopLvl=""True",
+"Value=""True",
+"ConLike=""True",
+"WorkFree=""True",
+"Expandable=""True",
+"Guidance=""IF_ARGS" [] "20" 0
+}]
+"$trModule"_"s1t8" = "\"T\""#
+
+
+"$trModule"_"s1t7"  "::" "TrName"
+["LclId",
+"Unf=""Unf"{"Src=""<vanilla>",
+"TopLvl=""True",
+"Value=""True",
+"ConLike=""True",
+"WorkFree=""True",
+"Expandable=""True",
+"Guidance=""IF_ARGS" [] "10" "20"
+}]
+"$trModule"_"s1t7"
+= "TrNameS" "$trModule"_"s1t8"
+
+
+"$trModule"  "::" "Module"
+["LclIdX",
+"Unf=""Unf"{"Src=""<vanilla>",
+"TopLvl=""True",
+"Value=""True",
+"ConLike=""True",
+"WorkFree=""True",
+"Expandable=""True",
+"Guidance=""IF_ARGS" [] "10" "30"
+}]
+"$trModule"
+= "Module"
+  "$trModule"_"s1t5" "$trModule"_"s1t7"
+7
+
+::ImplicitAnchor*haskell"/kythe/node/kind*anchor7
+
+::ImplicitAnchor*haskell"/kythe/subkind*implicitJ
+
+::ImplicitAnchor*haskell/kythe/edge/childof"output-dir/T.core"/?
+
+::ImplicitAnchor*haskell/kythe/edge/ref
+:*haskell"/<
+
+haskell:term:::main*haskell"/kythe/node/kind*variable=
+
+haskell:term:::main*haskell"/kythe/complete*
+definitionI
+-
+"haskell:term:::main:ImplicitAnchor*haskell"/kythe/node/kind*anchorI
+-
+"haskell:term:::main:ImplicitAnchor*haskell"/kythe/subkind*implicit\
+-
+"haskell:term:::main:ImplicitAnchor*haskell/kythe/edge/childof"output-dir/T.core"/o
+-
+"haskell:term:::main:ImplicitAnchor*haskell/kythe/edge/defines/binding
+haskell:term:::main*haskell"/F
+
+haskell:term:::main*haskell/kythe/edge/childof
+:*haskell"/A
+#
+haskell:term:::$trModule*haskell"/kythe/node/kind*variableB
+#
+haskell:term:::$trModule*haskell"/kythe/complete*
+definitionN
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/node/kind*anchorN
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/subkind*implicita
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/childof"output-dir/T.core"/y
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/defines/binding#
+haskell:term:::$trModule*haskell"/K
+#
+haskell:term:::$trModule*haskell/kythe/edge/childof
+:*haskell"/A
+#
+haskell:term:::$trModule*haskell"/kythe/node/kind*variableB
+#
+haskell:term:::$trModule*haskell"/kythe/complete*
+definitionN
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/node/kind*anchorN
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/subkind*implicita
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/childof"output-dir/T.core"/y
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/defines/binding#
+haskell:term:::$trModule*haskell"/K
+#
+haskell:term:::$trModule*haskell/kythe/edge/childof
+:*haskell"/A
+#
+haskell:term:::$trModule*haskell"/kythe/node/kind*variableB
+#
+haskell:term:::$trModule*haskell"/kythe/complete*
+definitionN
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/node/kind*anchorN
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/subkind*implicita
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/childof"output-dir/T.core"/y
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/defines/binding#
+haskell:term:::$trModule*haskell"/K
+#
+haskell:term:::$trModule*haskell/kythe/edge/childof
+:*haskell"/A
+#
+haskell:term:::$trModule*haskell"/kythe/node/kind*variableB
+#
+haskell:term:::$trModule*haskell"/kythe/complete*
+definitionN
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/node/kind*anchorN
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/subkind*implicita
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/childof"output-dir/T.core"/y
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/defines/binding#
+haskell:term:::$trModule*haskell"/K
+#
+haskell:term:::$trModule*haskell/kythe/edge/childof
+:*haskell"/A
+#
+haskell:term:::$trModule*haskell"/kythe/node/kind*variableB
+#
+haskell:term:::$trModule*haskell"/kythe/complete*
+definitionN
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/node/kind*anchorN
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/subkind*implicita
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/childof"output-dir/T.core"/y
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/defines/binding#
+haskell:term:::$trModule*haskell"/K
+#
+haskell:term:::$trModule*haskell/kythe/edge/childof
+:*haskell"/N
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/node/kind*anchorN
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/subkind*implicita
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/childof"output-dir/T.core"/m
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/ref#
+haskell:term:::$trModule*haskell"/N
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/node/kind*anchorN
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/subkind*implicita
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/childof"output-dir/T.core"/m
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/ref#
+haskell:term:::$trModule*haskell"/N
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/node/kind*anchorN
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/subkind*implicita
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/childof"output-dir/T.core"/m
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/ref#
+haskell:term:::$trModule*haskell"/N
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/node/kind*anchorN
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell"/kythe/subkind*implicita
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/childof"output-dir/T.core"/m
+2
+'haskell:term:::$trModule:ImplicitAnchor*haskell/kythe/edge/ref#
+haskell:term:::$trModule*haskell"/
