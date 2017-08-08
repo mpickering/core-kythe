@@ -29,20 +29,24 @@ let
        lens = super.callHackage "lens" "4.15.3" {} ;
        prettyprinter = null;
        lens-labels = super.callPackage ./lens-labels.nix {};
-       proto-lens = pkgs.haskell.lib.doJailbreak super.proto-lens;
-       proto-lens-descriptors = pkgs.haskell.lib.doJailbreak super.proto-lens-descriptors;
-       proto-lens-protoc = pkgs.haskell.lib.doJailbreak super.proto-lens-protoc;
+       proto-lens = pkgs.haskell.lib.addBuildTool (super.callPackage ./proto-lens.nix {}) pkgs.protobuf3_2;
+       proto-lens-descriptors = pkgs.haskell.lib.addBuildTool (super.callPackage ./proto-lens-descriptors.nix {}) pkgs.protobuf3_2;
+       proto-lens-protoc = pkgs.haskell.lib.addBuildTool (super.callPackage ./proto-lens-protoc.nix {}) pkgs.protobuf3_2;
+       proto-lens-combinators = pkgs.haskell.lib.addBuildTool (super.callPackage ./proto-lens-combinators.nix {}) pkgs.protobuf3_2;
 
  	     haskell-indexer-backend-core = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/haskell-indexer-backend-core/default.nix {});
 	     haskell-indexer-backend-ghc  = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/haskell-indexer-backend-ghc/default.nix {});
-	     haskell-indexer-frontend-kythe  = super.callPackage ./haskell-indexer/haskell-indexer-frontend-kythe/default.nix {};
+	     haskell-indexer-frontend-kythe  = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/haskell-indexer-frontend-kythe/default.nix {});
 	     haskell-indexer-pathutil 	 = super.callPackage ./haskell-indexer/haskell-indexer-pathutil/default.nix {};
 	     haskell-indexer-pipeline-ghckythe-wrapper  = super.callPackage ./haskell-indexer/haskell-indexer-pipeline-ghckythe-wrapper/default.nix {};
 	     haskell-indexer-pipeline-ghckythe = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/haskell-indexer-pipeline-ghckythe/default.nix {});
 	     haskell-indexer-translate  = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/haskell-indexer-translate/default.nix {});
-	     kythe-proto = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/kythe-proto/default.nix {});
+	     kythe-proto = pkgs.haskell.lib.addBuildTool (pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/kythe-proto/default.nix {})) pkgs.protobuf3_2;
 	     kythe-schema  = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/kythe-schema/default.nix {});
 	     text-offset 	= pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/text-offset/default.nix {});
+
+       kythe = pkgs.callPackage ./simple-kythe.nix {};
+
 
         };
 
