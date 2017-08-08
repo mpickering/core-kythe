@@ -17,8 +17,11 @@ import Control.Monad
 import Control.Lens hiding ((<.>))
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
+import qualified Data.Text.Encoding.Error as T
 import qualified Data.Text.IO as T
 import PprCore
+import qualified FastString as FS
 import Outputable (SDoc(..))
 import OutputableAnnotation
 import GhcPlugins (Plugin(..), defaultPlugin, CoreM, CoreToDo(..), CommandLineOption, ModGuts(..)
@@ -26,7 +29,7 @@ import GhcPlugins (Plugin(..), defaultPlugin, CoreM, CoreToDo(..), CommandLineOp
                   , NamedThing(..), Name)
 import Name
 import Module hiding (getModule)
-import qualified GhcPlugins as GHC ( Expr(..) )
+import qualified GhcPlugins as GHC ( getModule, Expr(..) )
 import Language.Haskell.Indexer.Translate hiding (Pos(..))
 import qualified Language.Haskell.Indexer.Translate as P (Pos(..))
 import CoreSyn hiding (Expr (..))
@@ -51,12 +54,15 @@ import Data.Conduit.List (chunksOf)
 import Data.ProtoLens ( encodeMessage )
 import Data.Bits
 
+-- DataTypes
 
 data Pos = Pos { _x :: Int, _y :: Int } deriving Show
 
 data OutputState = OutputState { _pos :: Pos, _nameMap :: NameEnv Tick }
 
-data OutputReader = OutputReader { _binderPos :: Maybe Span, _outFile :: FilePath }
+data OutputReader = OutputReader { _binderPos :: Maybe Span
+                                 , _outFile :: FilePath
+                                 , _curModule :: Module }
 
 data SrcSpan = SS Pos Pos FilePath deriving Show
 
@@ -69,6 +75,8 @@ cvtSrcSpan :: SrcSpan -> Span
 cvtSrcSpan (SS (Pos x1 y1) (Pos x2 y2) fp) =
   let cfp = makeSourcePath fp
   in Span (P.Pos y1 x1 cfp) (P.Pos y2 x2 cfp)
+
+-- The plugin
 
 plugin :: Plugin
 plugin = defaultPlugin {
@@ -87,22 +95,31 @@ printPass fp = CoreDoPluginPass "Print Pass" (doPrint fp)
 
 doPrint :: FilePath -> ModGuts -> CoreM ModGuts
 doPrint outdir mgs@ModGuts{mg_binds, mg_module} = do
-    let outpath = (makeModulePath outdir mg_module)
+    let outpath = makeOutPath outdir mg_module
+        entriesPath = makeEntriesPath outdir mg_module
     --liftIO $ putStrLn outpath
     dflags <- getDynFlags
+    curm <- GHC.getModule
     let ctx = initSDocContext dflags (defaultUserStyle dflags)
         sdoc = runSDoc (pprCoreBindingsWithAnn mg_binds)
     --liftIO $ putStrLn "Running printer"
-    let ((pprint, st), xrefs) = runRender outpath (render (sdoc ctx))
+    let ((pprint, st), xrefs) = runRender outpath curm (render (sdoc ctx))
     --liftIO $ T.putStrLn pprint
     --liftIO $ putStrLn $ showXrefs xrefs (view nameMap st)
     liftIO $ T.writeFile outpath pprint
     let xref = toXRef mg_module outpath xrefs (view nameMap st)
-    liftIO $ output pprint xref
+    liftIO $ output outpath entriesPath pprint xref
     return mgs
 
-makeModulePath :: FilePath -> Module -> FilePath
-makeModulePath fp md = fp </> modName <.> "core"
+lenientDecodeUtf8 :: FilePath -> IO T.Text
+lenientDecodeUtf8 = fmap (T.decodeUtf8With T.lenientDecode) . B.readFile
+
+makeOutPath, makeEntriesPath :: FilePath -> Module -> FilePath
+makeOutPath = makeModulePath "core"
+makeEntriesPath = makeModulePath "entries"
+
+makeModulePath :: String -> FilePath -> Module -> FilePath
+makeModulePath suf fp md = fp </> modName <.> suf
   where
     modName = moduleNameString (moduleName md)
 
@@ -116,23 +133,19 @@ makeModuleTick mod = ModuleTick
                       , mtSpan = Nothing }
 
 makePkgModule :: Module -> PkgModule
-makePkgModule ~(Module _ modname)
-  = PkgModule { getPackage = "", getModule =  ""  } -- T.pack (moduleNameString modname) }
+makePkgModule (Module uid modname)
+  = PkgModule { getPackage = T.pack (FS.unpackFS (unitIdFS uid))
+              , getModule =  T.pack (moduleNameString modname)  }
 
 makeSourcePath :: FilePath -> SourcePath
 makeSourcePath fp = SourcePath (T.pack fp)
 
-data AST = Var Int | Add AST AST
 
-pprAST :: AST -> Doc AST
-pprAST a = annotate a (pprASTBasic a)
-
-pprASTBasic :: AST -> Doc AST
-pprASTBasic (Var n) = pretty n
-pprASTBasic (Add l r) = parens (pprAST l) <+> "+"
-                                               <+> parens (pprAST r)
-
-data XRefs = XRefs [Decl] (NameEnv Tick -> [TickReference])
+-- The intermediate type we use
+data XRefs = XRefs [Decl]  -- Decls
+                   (NameEnv Tick -> [TickReference]) -- Delayed references, the nameenv
+                                                     -- is a map from decl
+                                                     -- name to their ticks
 
 showXrefs ::  XRefs -> NameEnv Tick -> String
 showXrefs (XRefs ds nets)  ne = show (ds, nets ne)
@@ -153,9 +166,6 @@ instance Monoid XRefs where
 
 type Output a = ReaderT OutputReader (StateT OutputState (WriterT XRefs Identity)) a
 
-ds :: AST -> SimpleDocStream AST
-ds ast = layoutPretty defaultLayoutOptions (pprAST ast)
-
 render :: Doc PExpr -> Output T.Text
 render ast = go (treeForm (layoutPretty defaultLayoutOptions ast))
   where
@@ -169,7 +179,7 @@ render ast = go (treeForm (layoutPretty defaultLayoutOptions ast))
                         return t
         STLine i -> do
                       pos . y %= (+1)
-                      pos . x .= i
+                      pos . x .= (i + 1)
                       return (T.singleton '\n' <> T.replicate i " ")
         STAnn ann rest -> do
           p <- use pos
@@ -231,51 +241,55 @@ makeDecl b  ss =
     go :: b -> GHC.Expr b -> Output Decl
     go b eb =
       let
-          declIdentifierSpan = Nothing
+          declIdentifierSpan = Just (cvtSrcSpan ss)
           declType = StringyType "" ""
           declExtra = Nothing
       in do
         sp <- view outFile
-        let declTick = makeDeclTick sp (getName b) eb (cvtSrcSpan ss)
+        cm <- view curModule
+        let declTick = makeDeclTick sp cm (getName b) eb (cvtSrcSpan ss)
         nameMap %= (\n -> extendNameEnv n (getName b) declTick)
-        declIdentifierSpan <- view binderPos -- Need to refine this to a map probably?
+        --declIdentifierSpan <- view binderPos -- Need to refine this to a map probably?
         return Decl{..}
 
-makeDeclTick sourcePath n eb ss =
+makeDeclTick sourcePath cm n eb ss =
   let tickSourcePath = makeSourcePath sourcePath
-      tickPkgModule  = makePkgModule (nameModule n)
+      tickPkgModule  = makePkgModule (nameModuleWithInternal cm n)
       tickThing      = T.pack (getOccString n)
       tickSpan       = Just ss
       tickUniqueInModule = True
       tickTermLevel = True
   in Tick{..}
 
-singleton = (:[])
+-- Module is only set for extenal things but we also want to set it for
+-- internal ids.
+nameModuleWithInternal :: Module -> Name -> Module
+nameModuleWithInternal homeModule name = fromMaybe homeModule (nameModule_maybe name)
 
 
+-- Running the monad
 
 initialState :: OutputState
-initialState = OutputState (Pos 0 0) emptyNameEnv
+initialState = OutputState (Pos 1 1) emptyNameEnv
 
-runRender :: FilePath -> Output T.Text -> ((T.Text, OutputState), XRefs)
-runRender fp = runIdentity . runWriterT . flip runStateT initialState
+runRender :: FilePath -> Module -> Output T.Text -> ((T.Text, OutputState), XRefs)
+runRender fp m = runIdentity . runWriterT . flip runStateT initialState
                                         . flip runReaderT initialReader
   where
-    initialReader = OutputReader Nothing fp
+    initialReader = OutputReader Nothing fp m
 
 -- Final Conversion
 
-output :: Text -> XRef -> IO ()
-output pprint xref = do
-  let baseVName = Raw.VName "" "" "" "" "haskell"
-  collect baseVName pprint xref
+output :: FilePath -> FilePath -> Text -> XRef -> IO ()
+output infile outfile pprint xref = do
+  let baseVName = Raw.VName "" "" "" "" "core-haskell"
+  collect infile outfile baseVName xref
 
 
-collect :: Raw.VName -> Text -> XRef -> IO ()
-collect baseVName sourceText xref = do
-    -- Note: since this Conduit pipeline is pretty context-dependent, there
-    -- is low chance of leak due to accidental sharing (see
-    -- https://www.well-typed.com/blog/2016/09/sharing-conduit/).
+collect :: FilePath -> FilePath -> Raw.VName -> XRef -> IO ()
+collect infile outfile baseVName xref = do
+    sourceText <- lenientDecodeUtf8 infile
+    writeFile outfile ""
     hoist (return . runIdentity) (toKythe baseVName sourceText xref
         -- Batch an ad-hoc number of entries to be emitted together.
         =$= chunksOf 1000)
@@ -287,9 +301,9 @@ collect baseVName sourceText xref = do
 
     sink = mapM_ (\m -> do
         let wire = encodeMessage . Raw.toEntryProto $ m
-        B.putStr . BL.toStrict . Builder.toLazyByteString
+        B.appendFile outfile . BL.toStrict . Builder.toLazyByteString
                  . varInt . B.length $ wire
-        B.putStr wire)
+        B.appendFile outfile wire)
 
 -- | From proto-lens.
 varInt :: Int -> Builder.Builder
@@ -297,3 +311,8 @@ varInt n
     | n < 128 = Builder.word8 (fromIntegral n)
     | otherwise = Builder.word8 (fromIntegral $ n .&. 127 .|. 128)
                     <> varInt (n `shiftR` 7)
+
+-- Utility
+
+singleton :: a -> [a]
+singleton = (:[])

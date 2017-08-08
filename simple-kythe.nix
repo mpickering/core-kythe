@@ -1,4 +1,4 @@
-{ stdenv, binutils , fetchurl }:
+{ stdenv, binutils , fetchurl, glibc }:
 
 stdenv.mkDerivation rec {
   version = "0.0.26";
@@ -25,6 +25,12 @@ stdenv.mkDerivation rec {
   '';
 
   installPhase = ''
+    patchelf --interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" tools/write_entries
+    patchelf --set-rpath "${stdenv.cc.cc.lib}/lib64" tools/write_entries
+    patchelf --interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" tools/write_tables
+    patchelf --set-rpath "${stdenv.cc.cc.lib}/lib64" tools/write_tables
+    patchelf --interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" tools/http_server
+    patchelf --set-rpath "${stdenv.cc.cc.lib}/lib64" tools/http_server
     cp -R ./ $out
   '';
 

@@ -1,4 +1,5 @@
 let
+  kythe = pkgs.callPackage ./simple-kythe.nix {};
 
   ghcWithVersion = pkgs.haskell.compiler.ghcHEAD.override { version = "8.3.20170726"; };
 
@@ -42,11 +43,10 @@ let
 	     haskell-indexer-pipeline-ghckythe-wrapper  = super.callPackage ./haskell-indexer/haskell-indexer-pipeline-ghckythe-wrapper/default.nix {};
 	     haskell-indexer-pipeline-ghckythe = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/haskell-indexer-pipeline-ghckythe/default.nix {});
 	     haskell-indexer-translate  = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/haskell-indexer-translate/default.nix {});
-	     kythe-proto = pkgs.haskell.lib.addBuildTool (pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/kythe-proto/default.nix {})) pkgs.protobuf3_2;
+	     kythe-proto = pkgs.haskell.lib.addBuildTool (pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/kythe-proto/default.nix { kythe = kythe; })) pkgs.protobuf3_2;
 	     kythe-schema  = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/kythe-schema/default.nix {});
 	     text-offset 	= pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/text-offset/default.nix {});
 
-       kythe = pkgs.callPackage ./simple-kythe.nix {};
 
 
         };
@@ -54,6 +54,7 @@ let
       };
 in
   pkgs.stdenv.mkDerivation {
-    buildInputs = [ ghc ];
+    buildInputs = [ ghc kythe];
+    shellHook = "export KYTHE_DIR=${kythe}";
     name = "env";
   }
