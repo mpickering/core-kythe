@@ -6,15 +6,16 @@ Enter the environment with the plugin.
 nix-shell
 ```
 
-(This will take a while as it will build GHC).
+(This will take a while (1-2 hours) as it will build GHC).
 
 To use the plugin.
 
 ```
-ghc -fplugin KythePlugin -fplugin-opt KythePlugin:output-dir T.hs
+ghc -fplugin KythePlugin -fplugin-opt KythePlugin:logs T.hs
+./serve logs/ localhost:8080
 ```
 
-Will output the pretty printed source and currently the Haskell representation of
-the kythe references.
+Then access localhost:8080 in order to view the cross linked source.
+
 
 
