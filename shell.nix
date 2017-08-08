@@ -1,6 +1,10 @@
 let
+  pkgs = import <nixpkgs> {};
+
+  # kythe 2.6
   kythe = pkgs.callPackage ./simple-kythe.nix {};
 
+  # Overloaded GHC version
   ghcWithVersion = pkgs.haskell.compiler.ghcHEAD.override { version = "8.3.20170726"; };
 
   ghcVersion = pkgs.stdenv.lib.overrideDerivation ghcWithVersion (oldAttrs : {
@@ -11,11 +15,11 @@ let
                       sha256 = "06cjx9b8igmz9dh5zqfnpxy4ycq2wgbrayg9jnwvj1a08qbkzgd8";
                     };});
 
-  pkgs = import <nixpkgs> {};
+  # The main plugin, built with overridden package set
   plugin =
     onlyBuildHaskellPackages.callPackage ./default.nix {};
-  ghc = onlyBuildHaskellPackages.ghcWithPackages (ps: [plugin]);
 
+  # Overrides
   onlyBuildHaskellPackages = pkgs.haskell.packages.ghc802.override {
      overrides = self: super: {
        mkDerivation = args: super.mkDerivation (args // {
@@ -23,13 +27,19 @@ let
          doCheck  = false;
          doHaddock = false;
           });
+       # New boot modules
+       prettyprinter = null;
+       text = null;
+
+
+       # Over ride the GHC version to our custom one
        ghc = ghcVersion;
+
+       # Specific Overrides
        primitive = pkgs.haskell.lib.doJailbreak super.primitive;
        vector = pkgs.haskell.lib.doJailbreak super.vector;
        semigroupoids = super.callHackage "semigroupoids" "5.2" {} ;
        lens = super.callHackage "lens" "4.15.3" {} ;
-       prettyprinter = null;
-       text = null;
        lens-labels = super.callPackage ./lens-labels.nix {};
        proto-lens = pkgs.haskell.lib.addBuildTool (super.callPackage ./proto-lens.nix {}) pkgs.protobuf3_2;
        proto-lens-descriptors = pkgs.haskell.lib.addBuildTool (super.callPackage ./proto-lens-descriptors.nix {}) pkgs.protobuf3_2;
@@ -52,6 +62,8 @@ let
         };
 
       };
+
+  ghc = onlyBuildHaskellPackages.ghcWithPackages (ps: [plugin]);
 in
   pkgs.stdenv.mkDerivation {
     buildInputs = [ ghc kythe];
