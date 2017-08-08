@@ -28,6 +28,7 @@ let
        semigroupoids = super.callHackage "semigroupoids" "5.2" {} ;
        lens = super.callHackage "lens" "4.15.3" {} ;
        prettyprinter = null;
+       text = null;
        lens-labels = super.callPackage ./lens-labels.nix {};
        proto-lens = pkgs.haskell.lib.addBuildTool (super.callPackage ./proto-lens.nix {}) pkgs.protobuf3_2;
        proto-lens-descriptors = pkgs.haskell.lib.addBuildTool (super.callPackage ./proto-lens-descriptors.nix {}) pkgs.protobuf3_2;

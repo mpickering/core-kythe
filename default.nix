@@ -1,14 +1,16 @@
-{ mkDerivation, base, conduit, filepath, ghc
-, haskell-indexer-frontend-kythe, haskell-indexer-translate, lens
-, mmorph, mtl, prettyprinter, stdenv, text
+{ mkDerivation, base, bytestring, conduit, filepath, ghc
+, haskell-indexer-frontend-kythe, haskell-indexer-translate
+, kythe-schema, lens, mmorph, mtl, prettyprinter, proto-lens
+, stdenv, text
 }:
 mkDerivation {
   pname = "core-kythe";
   version = "0.1.0.0";
   src = ./.;
   libraryHaskellDepends = [
-    base conduit filepath ghc haskell-indexer-frontend-kythe
-    haskell-indexer-translate lens mmorph mtl prettyprinter text
+    base bytestring conduit filepath ghc haskell-indexer-frontend-kythe
+    haskell-indexer-translate kythe-schema lens mmorph mtl
+    prettyprinter proto-lens text
   ];
   license = stdenv.lib.licenses.bsd3;
 }

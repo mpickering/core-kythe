@@ -41,9 +41,16 @@ import Control.Monad.Morph (lift, hoist)
 import Data.Conduit (($$), (=$=), await, awaitForever, yield, Conduit, Sink)
 
 import qualified Language.Kythe.Schema.Raw as Raw
+import qualified Language.Kythe.Schema.Raw.Proto as Raw
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Builder as Builder
+
+import Language.Haskell.Indexer.Frontend.Kythe
+import Data.Conduit.List (chunksOf)
+import Data.ProtoLens ( encodeMessage )
+import Data.Bits
+
 
 data Pos = Pos { _x :: Int, _y :: Int } deriving Show
 
@@ -81,15 +88,17 @@ printPass fp = CoreDoPluginPass "Print Pass" (doPrint fp)
 doPrint :: FilePath -> ModGuts -> CoreM ModGuts
 doPrint outdir mgs@ModGuts{mg_binds, mg_module} = do
     let outpath = (makeModulePath outdir mg_module)
-    liftIO $ putStrLn outpath
+    --liftIO $ putStrLn outpath
     dflags <- getDynFlags
     let ctx = initSDocContext dflags (defaultUserStyle dflags)
         sdoc = runSDoc (pprCoreBindingsWithAnn mg_binds)
-    liftIO $ putStrLn "Running printer"
+    --liftIO $ putStrLn "Running printer"
     let ((pprint, st), xrefs) = runRender outpath (render (sdoc ctx))
-    liftIO $ T.putStrLn pprint
-    liftIO $ putStrLn $ showXrefs xrefs (view nameMap st)
-    liftIO $ putStrLn (show (toXRef mg_module outpath xrefs (view nameMap st)))
+    --liftIO $ T.putStrLn pprint
+    --liftIO $ putStrLn $ showXrefs xrefs (view nameMap st)
+    liftIO $ T.writeFile outpath pprint
+    let xref = toXRef mg_module outpath xrefs (view nameMap st)
+    liftIO $ output pprint xref
     return mgs
 
 makeModulePath :: FilePath -> Module -> FilePath
@@ -147,7 +156,7 @@ type Output a = ReaderT OutputReader (StateT OutputState (WriterT XRefs Identity
 ds :: AST -> SimpleDocStream AST
 ds ast = layoutPretty defaultLayoutOptions (pprAST ast)
 
-render :: Doc PExpr -> Output Text
+render :: Doc PExpr -> Output T.Text
 render ast = go (treeForm (layoutPretty defaultLayoutOptions ast))
   where
     go tf =
@@ -204,7 +213,7 @@ makeReferenceTick :: Name -> Span -> NameEnv Tick -> Maybe TickReference
 makeReferenceTick n ss nenv =
   case lookupNameEnv nenv n of
     -- For debugging for now
-    Nothing -> trace ("Couldn't find name in nameenv: " ++ show (getOccString n) ++ show ss) Nothing
+    Nothing -> Nothing -- trace ("Couldn't find name in nameenv: " ++ show (getOccString n) ++ show ss) Nothing
     Just t ->
       let refTargetTick = t
           refSourceSpan = ss
@@ -221,17 +230,19 @@ makeDecl b  ss =
   where
     go :: b -> GHC.Expr b -> Output Decl
     go b eb =
-      let declTick = makeDeclTick (getName b) eb (cvtSrcSpan ss)
+      let
           declIdentifierSpan = Nothing
           declType = StringyType "" ""
           declExtra = Nothing
       in do
+        sp <- view outFile
+        let declTick = makeDeclTick sp (getName b) eb (cvtSrcSpan ss)
         nameMap %= (\n -> extendNameEnv n (getName b) declTick)
         declIdentifierSpan <- view binderPos -- Need to refine this to a map probably?
         return Decl{..}
 
-makeDeclTick n eb ss =
-  let tickSourcePath = SourcePath "Pass-In"
+makeDeclTick sourcePath n eb ss =
+  let tickSourcePath = makeSourcePath sourcePath
       tickPkgModule  = makePkgModule (nameModule n)
       tickThing      = T.pack (getOccString n)
       tickSpan       = Just ss
@@ -246,7 +257,7 @@ singleton = (:[])
 initialState :: OutputState
 initialState = OutputState (Pos 0 0) emptyNameEnv
 
-runRender :: FilePath -> Output Text -> ((Text, OutputState), XRefs)
+runRender :: FilePath -> Output T.Text -> ((T.Text, OutputState), XRefs)
 runRender fp = runIdentity . runWriterT . flip runStateT initialState
                                         . flip runReaderT initialReader
   where
@@ -254,7 +265,13 @@ runRender fp = runIdentity . runWriterT . flip runStateT initialState
 
 -- Final Conversion
 
+output :: Text -> XRef -> IO ()
+output pprint xref = do
+  let baseVName = Raw.VName "" "" "" "" "haskell"
+  collect baseVName pprint xref
 
+
+collect :: Raw.VName -> Text -> XRef -> IO ()
 collect baseVName sourceText xref = do
     -- Note: since this Conduit pipeline is pretty context-dependent, there
     -- is low chance of leak due to accidental sharing (see
@@ -273,3 +290,10 @@ collect baseVName sourceText xref = do
         B.putStr . BL.toStrict . Builder.toLazyByteString
                  . varInt . B.length $ wire
         B.putStr wire)
+
+-- | From proto-lens.
+varInt :: Int -> Builder.Builder
+varInt n
+    | n < 128 = Builder.word8 (fromIntegral n)
+    | otherwise = Builder.word8 (fromIntegral $ n .&. 127 .|. 128)
+                    <> varInt (n `shiftR` 7)
