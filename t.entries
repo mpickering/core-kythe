@@ -1,13 +1,10 @@
-[1 of 1] Compiling T                ( T.hs, T.o ) [KythePlugin changed]
-
-
 ;
 "output-dir/T.core/kythe/edge/childof
 :*haskell"/)
 
 :*haskell"/kythe/node/kind*package-
-"output-dir/T.core"/kythe/node/kind*file«	
-"output-dir/T.core"/kythe/text*†	
+"output-dir/T.core"/kythe/node/kind*file«
+"output-dir/T.core"/kythe/text*†
 main  :: IO ()
 [LclIdX,
 Unf=Unf{Src=<vanilla>,
