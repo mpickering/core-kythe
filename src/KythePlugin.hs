@@ -171,26 +171,34 @@ render ast = go (treeForm (layoutPretty defaultLayoutOptions ast))
   where
     go tf =
       case tf of
-        STEmpty -> pure mempty
-        STChar c -> do pos . x %= (+1)
-                       pure (T.singleton c)
+        STEmpty ->
+          pure mempty
+        STChar c -> do
+          pos . x %= (+1)
+          pure (T.singleton c)
         STText l t -> do
-                        pos . x %= (+ l)
-                        return t
+          pos . x %= (+ l)
+          return t
         STLine i -> do
-                      pos . y %= (+1)
-                      pos . x .= (i + 1)
-                      return (T.singleton '\n' <> T.replicate i " ")
+          pos . y %= (+1)
+          pos . x .= (i + 1) -- 1-indexing
+          return (T.singleton '\n' <> T.replicate i " ")
         STAnn ann rest -> do
-          p <- use pos
-          res <- go rest
-          p' <- use pos
-          out <- view outFile
-          whatCore ann (SS p p' out) >>= tell
+          (ss, res) <- withSS (go rest)
+          whatCore ann ss >>= tell
           return res
 
 
         STConcat xs -> fmap mconcat (traverse go xs)
+
+-- Returns the Source span of the result of outputing the thing
+withSS :: Output a -> Output (SrcSpan, a)
+withSS o = do
+  p <- use pos
+  res <- o
+  p' <- use pos
+  out <- view outFile
+  return ((SS p p' out), res)
 
 whatCore :: PExpr -> SrcSpan -> Output XRefs
 whatCore (PCoreExpr e) ss = return mempty
