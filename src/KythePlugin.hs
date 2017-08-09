@@ -13,7 +13,6 @@ import Data.Text.Prettyprint.Doc.Render.Util.SimpleDocTree
 import Control.Monad.Writer hiding ((<>))
 import Control.Monad.State
 import Control.Monad.Reader
-import Control.Monad
 import Control.Lens hiding ((<.>))
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -26,7 +25,7 @@ import Outputable (SDoc(..))
 import OutputableAnnotation
 import GhcPlugins (Plugin(..), defaultPlugin, CoreM, CoreToDo(..), CommandLineOption, ModGuts(..)
                   , getDynFlags, defaultUserStyle, initSDocContext, Module, OutputableBndr
-                  , NamedThing(..), Name, isValName, RealSrcLoc(..))
+                  , NamedThing(..), Name, isValName, RealSrcLoc)
 import Name
 import qualified SrcLoc as GHC
 import Module hiding (getModule)
@@ -38,11 +37,10 @@ import System.FilePath
 import NameEnv
 import Data.Maybe
 import Debug.Trace
-import Control.Concurrent.MVar (MVar)
 import Control.Monad.Identity (runIdentity)
 import Control.Monad.Morph (lift, hoist)
 --import qualified Data.ByteString as B
-import Data.Conduit (($$), (=$=), await, awaitForever, yield, Conduit, Sink)
+import Data.Conduit (($$), (=$=), awaitForever,  Sink)
 
 import qualified Language.Kythe.Schema.Raw as Raw
 import qualified Language.Kythe.Schema.Raw.Proto as Raw
@@ -64,8 +62,7 @@ data OutputState = OutputState { _pos :: Pos
                                , _binderMap :: NameEnv Span
                                                 }
 
-data OutputReader = OutputReader { _binderPos :: Maybe Span
-                                 , _outFile :: FilePath
+data OutputReader = OutputReader { _outFile :: FilePath
                                  , _curModule :: Module }
 
 data SrcSpan = SS Pos Pos FilePath deriving Show
@@ -88,9 +85,8 @@ cvtGhcSrcSpan ss = case ss of
   where
     realToPos :: RealSrcLoc -> P.Pos
     realToPos r =
-        let path = SourcePath . transform . T.pack . FS.unpackFS . GHC.srcLocFile $ r
+        let path = SourcePath . T.pack . FS.unpackFS . GHC.srcLocFile $ r
         in P.Pos (GHC.srcLocLine r) (GHC.srcLocCol r) path
-      where transform = id -- aoFilePathTransform (ecOptions given)
 
 -- The plugin
 
@@ -124,7 +120,7 @@ doPrint outdir mgs@ModGuts{mg_binds, mg_module} = do
     --liftIO $ putStrLn $ showXrefs xrefs (view nameMap st)
     liftIO $ T.writeFile outpath pprint
     let xref = toXRef mg_module outpath xrefs (view nameMap st)
-    liftIO $ output outpath entriesPath pprint xref
+    liftIO $ output outpath entriesPath xref
     return mgs
 
 lenientDecodeUtf8 :: FilePath -> IO T.Text
@@ -144,8 +140,8 @@ makeAnalysedFile :: FilePath -> AnalysedFile
 makeAnalysedFile (makeSourcePath -> outpath) = AnalysedFile outpath outpath
 
 makeModuleTick :: Module -> ModuleTick
-makeModuleTick mod = ModuleTick
-                      { mtPkgModule = makePkgModule mod
+makeModuleTick hmod = ModuleTick
+                      { mtPkgModule = makePkgModule hmod
                       , mtSpan = Nothing }
 
 makePkgModule :: Module -> PkgModule
@@ -163,13 +159,13 @@ data XRefs = XRefs [Decl]  -- Decls
                                                      -- is a map from decl
                                                      -- name to their ticks
 
-showXrefs ::  XRefs -> NameEnv Tick -> String
-showXrefs (XRefs ds nets)  ne = show (ds, nets ne)
+--showXrefs ::  XRefs -> NameEnv Tick -> String
+--showXrefs (XRefs ds nets)  ne = show (ds, nets ne)
 
 toXRef :: Module -> FilePath -> XRefs -> NameEnv Tick -> XRef
-toXRef mod fp (XRefs ds nets)  ne =
+toXRef hmod fp (XRefs ds nets)  ne =
     XRef { xrefFile      = makeAnalysedFile fp
-    , xrefModule    = makeModuleTick mod
+    , xrefModule    = makeModuleTick hmod
     , xrefDecls     = ds
     , xrefCrossRefs = nets ne
     , xrefRelations = []
@@ -225,9 +221,9 @@ whatCore (PCoreExpr e) ss =
 -- Need to particularlly deal with binders here
   case e of
     GHC.Lam b eb -> do
-      let (bs, e) = collectBinders eb
-      (\d -> XRefs d (const [])) <$> mapM (goMakeDecl ss) bs
-    GHC.Let b e ->
+      let (bs, _e') = collectBinders eb
+      (\d -> XRefs d (const [])) <$> mapM (goMakeDecl ss) (b:bs)
+    GHC.Let b _e ->
       (\d -> XRefs d (const [])) <$> makeDecl b ss
     _ -> return mempty
 {-
@@ -279,9 +275,9 @@ makeReferenceTick outf cm n ss nenv =
 
 
 makeDecl :: forall b . (OutputableBndr b, NamedThing b) => Bind b -> SrcSpan -> Output [Decl]
-makeDecl b  ss =
-  case b of
-    NonRec b eb -> singleton <$> goMakeDecl ss b
+makeDecl bi  ss =
+  case bi of
+    NonRec b _eb -> singleton <$> goMakeDecl ss b
     Rec bs -> mapM (goMakeDecl ss . fst) bs
 
 goMakeDecl :: NamedThing b => SrcSpan -> b -> Output Decl
@@ -308,6 +304,7 @@ nameInModuleToTick ss sourcePath cm n = do
       , tickTermLevel = isValName n
       }
 
+makeDeclTick :: Name -> Span -> Output Tick
 makeDeclTick n ss = do
     {-
   let tickSourcePath = makeSourcePath sourcePath
@@ -342,12 +339,12 @@ runRender :: FilePath -> Module -> Output T.Text -> ((T.Text, OutputState), XRef
 runRender fp m = runIdentity . runWriterT . flip runStateT initialState
                                         . flip runReaderT initialReader
   where
-    initialReader = OutputReader Nothing fp m
+    initialReader = OutputReader fp m
 
 -- Final Conversion
 
-output :: FilePath -> FilePath -> Text -> XRef -> IO ()
-output infile outfile pprint xref = do
+output :: FilePath -> FilePath -> XRef -> IO ()
+output infile outfile xref = do
   let baseVName = Raw.VName "" "" "" "" "core-haskell"
   collect infile outfile baseVName xref
 
