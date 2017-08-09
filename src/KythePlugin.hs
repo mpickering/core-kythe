@@ -183,8 +183,12 @@ instance Monoid XRefs where
 type Output a = ReaderT OutputReader (StateT OutputState (WriterT XRefs Identity)) a
 
 render :: Doc PExpr -> Output T.Text
-render ast = go (treeForm (layoutPretty defaultLayoutOptions ast))
+render ast = go (treeForm (layoutPretty customLayoutOptions ast))
   where
+    customLayoutOptions =
+      defaultLayoutOptions
+        { layoutPageWidth = AvailablePerLine 150 1 }
+
     go tf =
       case tf of
         STEmpty ->
@@ -217,14 +221,20 @@ withSS o = do
   return ((SS p p' out), res)
 
 whatCore :: PExpr -> SrcSpan -> Output XRefs
-whatCore (PCoreExpr e) ss = return mempty
+whatCore (PCoreExpr e) ss =
 -- Need to particularlly deal with binders here
+  case e of
+    GHC.Lam b eb -> do
+      let (bs, e) = collectBinders eb
+      (\d -> XRefs d (const [])) <$> mapM (goMakeDecl ss) bs
+    GHC.Let b e ->
+      (\d -> XRefs d (const [])) <$> makeDecl b ss
+    _ -> return mempty
 {-
   case e of
     GHC.Var {} -> "Var" -- Does this cause double wrapping?
     GHC.Lit {} -> "Lit"
     GHC.App {} -> "App"
-    GHC.Lam {} -> "Lam"
     GHC.Let {} -> "Let"
     GHC.Case {} -> "Case"
     GHC.Cast {} -> "Cast"
@@ -271,17 +281,16 @@ makeReferenceTick outf cm n ss nenv =
 makeDecl :: forall b . (OutputableBndr b, NamedThing b) => Bind b -> SrcSpan -> Output [Decl]
 makeDecl b  ss =
   case b of
-    NonRec b eb -> singleton <$> go b eb
-    Rec bs -> mapM (uncurry go) bs
-  where
-    go :: b -> GHC.Expr b -> Output Decl
-    go b eb =
+    NonRec b eb -> singleton <$> goMakeDecl ss b
+    Rec bs -> mapM (goMakeDecl ss . fst) bs
+
+goMakeDecl :: NamedThing b => SrcSpan -> b -> Output Decl
+goMakeDecl ss b =
       let
-          declIdentifierSpan = Just (cvtSrcSpan ss)
           declType = StringyType "" ""
           declExtra = Nothing
       in do
-        declTick <- makeDeclTick (getName b) eb (cvtSrcSpan ss)
+        declTick <- makeDeclTick (getName b) (cvtSrcSpan ss)
         nameMap %= (\n -> extendNameEnv n (getName b) declTick)
         declIdentifierSpan <- uses binderMap (\n -> lookupNameEnv n (getName b))
         return Decl{..}
@@ -299,7 +308,7 @@ nameInModuleToTick ss sourcePath cm n = do
       , tickTermLevel = isValName n
       }
 
-makeDeclTick n eb ss = do
+makeDeclTick n ss = do
     {-
   let tickSourcePath = makeSourcePath sourcePath
       tickPkgModule  = makePkgModule (nameModuleWithInternal cm n)
