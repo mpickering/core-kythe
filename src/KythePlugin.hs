@@ -26,8 +26,9 @@ import Outputable (SDoc(..))
 import OutputableAnnotation
 import GhcPlugins (Plugin(..), defaultPlugin, CoreM, CoreToDo(..), CommandLineOption, ModGuts(..)
                   , getDynFlags, defaultUserStyle, initSDocContext, Module, OutputableBndr
-                  , NamedThing(..), Name)
+                  , NamedThing(..), Name, isValName, RealSrcLoc(..))
 import Name
+import qualified SrcLoc as GHC
 import Module hiding (getModule)
 import qualified GhcPlugins as GHC ( getModule, Expr(..) )
 import Language.Haskell.Indexer.Translate hiding (Pos(..))
@@ -58,7 +59,10 @@ import Data.Bits
 
 data Pos = Pos { _x :: Int, _y :: Int } deriving Show
 
-data OutputState = OutputState { _pos :: Pos, _nameMap :: NameEnv Tick }
+data OutputState = OutputState { _pos :: Pos
+                               , _nameMap :: NameEnv Tick
+                               , _binderMap :: NameEnv Span
+                                                }
 
 data OutputReader = OutputReader { _binderPos :: Maybe Span
                                  , _outFile :: FilePath
@@ -75,6 +79,18 @@ cvtSrcSpan :: SrcSpan -> Span
 cvtSrcSpan (SS (Pos x1 y1) (Pos x2 y2) fp) =
   let cfp = makeSourcePath fp
   in Span (P.Pos y1 x1 cfp) (P.Pos y2 x2 cfp)
+
+cvtGhcSrcSpan :: GHC.SrcSpan -> Maybe Span
+cvtGhcSrcSpan ss = case ss of
+    GHC.UnhelpfulSpan _ -> Nothing
+    GHC.RealSrcSpan r -> Just $ Span (realToPos . GHC.realSrcSpanStart $ r)
+                                 (realToPos . GHC.realSrcSpanEnd $ r)
+  where
+    realToPos :: RealSrcLoc -> P.Pos
+    realToPos r =
+        let path = SourcePath . transform . T.pack . FS.unpackFS . GHC.srcLocFile $ r
+        in P.Pos (GHC.srcLocLine r) (GHC.srcLocCol r) path
+      where transform = id -- aoFilePathTransform (ecOptions given)
 
 -- The plugin
 
@@ -220,18 +236,30 @@ whatCore (PBind b) ss =
   (\d -> XRefs d (const [])) <$> makeDecl b ss
 whatCore (PVar b v) ss  =
   case b of
-    Binder -> return mempty -- local binderPos ss -- We already print out binding sites as decls but need
+    Binder ->   do
+      addBinder v ss -- We already print out binding sites as decls but need
+      return mempty
                                  -- to record exactly where the binder is
                                  -- for better highlighting
-    Reference ->
-      let rt n = maybeToList (makeReferenceTick (getName v) (cvtSrcSpan ss) n)
-      in return $ XRefs [] rt -- References generate reference ticks
+    Reference -> do
+      outf <- view outFile
+      cm <- view curModule
+      let rt n = maybeToList (makeReferenceTick outf cm (getName v) (cvtSrcSpan ss) n)
+      return $ XRefs [] rt -- References generate reference ticks
 
-makeReferenceTick :: Name -> Span -> NameEnv Tick -> Maybe TickReference
-makeReferenceTick n ss nenv =
+makeReferenceTick :: FilePath -> Module -> Name -> Span -> NameEnv Tick -> Maybe TickReference
+makeReferenceTick outf cm n ss nenv =
   case lookupNameEnv nenv n of
     -- For debugging for now
-    Nothing -> Nothing -- trace ("Couldn't find name in nameenv: " ++ show (getOccString n) ++ show ss) Nothing
+    Nothing -> do
+      -- Names without local definitions
+      traceM ("Couldn't find name in nameenv: " ++ show (getOccString n) ++ show ss)
+      let refTargetTick = nameInModuleToTick Nothing outf cm n
+          refSourceSpan = ss
+          refHighLevelContext = Nothing
+          refKind = Ref
+      return $ TickReference{..}
+
     Just t ->
       let refTargetTick = t
           refSourceSpan = ss
@@ -253,21 +281,39 @@ makeDecl b  ss =
           declType = StringyType "" ""
           declExtra = Nothing
       in do
-        sp <- view outFile
-        cm <- view curModule
-        let declTick = makeDeclTick sp cm (getName b) eb (cvtSrcSpan ss)
+        declTick <- makeDeclTick (getName b) eb (cvtSrcSpan ss)
         nameMap %= (\n -> extendNameEnv n (getName b) declTick)
-        --declIdentifierSpan <- view binderPos -- Need to refine this to a map probably?
+        declIdentifierSpan <- uses binderMap (\n -> lookupNameEnv n (getName b))
         return Decl{..}
 
-makeDeclTick sourcePath cm n eb ss =
+nameInModuleToTick :: Maybe Span -> FilePath -> Module -> Name -> Tick
+nameInModuleToTick ss sourcePath cm n = do
+    Tick
+      { tickSourcePath = makeSourcePath sourcePath
+      , tickPkgModule = makePkgModule (nameModuleWithInternal cm n)
+      , tickThing = nameOccurenceText n
+      -- If we pass in a SrcSpan, otherwise use a random one so that
+      -- we can still emit references
+      , tickSpan = maybe (cvtGhcSrcSpan (nameSrcSpan n)) Just  ss
+      , tickUniqueInModule = isExternalName n
+      , tickTermLevel = isValName n
+      }
+
+makeDeclTick n eb ss = do
+    {-
   let tickSourcePath = makeSourcePath sourcePath
       tickPkgModule  = makePkgModule (nameModuleWithInternal cm n)
       tickThing      = T.pack (getOccString n)
-      tickSpan       = Just ss
+      tickSpan       = cvtGhcSrcSpan (nameSrcSpan n) --Just ss
       tickUniqueInModule = True
-      tickTermLevel = True
-  in Tick{..}
+      -}
+
+  sourcePath <- view outFile
+  cm <- view curModule
+  return $ nameInModuleToTick (Just ss) sourcePath cm n
+
+nameOccurenceText :: Name -> Text
+nameOccurenceText n = T.pack (getOccString n)
 
 -- Module is only set for extenal things but we also want to set it for
 -- internal ids.
@@ -275,10 +321,13 @@ nameModuleWithInternal :: Module -> Name -> Module
 nameModuleWithInternal homeModule name = fromMaybe homeModule (nameModule_maybe name)
 
 
+addBinder :: NamedThing b => b -> SrcSpan -> Output ()
+addBinder b ss = binderMap %= (\n -> extendNameEnv n (getName b) (cvtSrcSpan ss))
+
 -- Running the monad
 
 initialState :: OutputState
-initialState = OutputState (Pos 1 1) emptyNameEnv
+initialState = OutputState (Pos 1 1) emptyNameEnv emptyNameEnv
 
 runRender :: FilePath -> Module -> Output T.Text -> ((T.Text, OutputState), XRefs)
 runRender fp m = runIdentity . runWriterT . flip runStateT initialState
