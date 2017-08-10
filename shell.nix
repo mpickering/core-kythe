@@ -11,8 +11,8 @@ let
                      name = "ghc-8.3.20170726";
                      src = pkgs.fetchgit {
                       url = "git://git.haskell.org/ghc.git";
-                      rev = "1a9aae88ec8f57393db4992748a7de08c54cfe61";
-                      sha256 = "06cjx9b8igmz9dh5zqfnpxy4ycq2wgbrayg9jnwvj1a08qbkzgd8";
+                      rev = "599aa0616211e42cf642a177515d5f8bee431eeb";
+                      sha256 = "1izknlw0acds6znw6a69sqf6w2caa680jdf4ahimn89hyxnz6s7i";
                     };});
 
   # The main plugin, built with overridden package set

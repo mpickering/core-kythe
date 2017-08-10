@@ -20,13 +20,17 @@ import qualified Data.Text.Encoding as T
 import qualified Data.Text.Encoding.Error as T
 import qualified Data.Text.IO as T
 import PprCore
+import Unique (getKey, mkUniqueGrimily)
 import qualified FastString as FS
 import Outputable (SDoc(..))
 import OutputableAnnotation
 import GhcPlugins (Plugin(..), defaultPlugin, CoreM, CoreToDo(..), CommandLineOption, ModGuts(..)
-                  , getDynFlags, defaultUserStyle, initSDocContext, Module, OutputableBndr
+                  , getDynFlags, defaultUserStyle, initSDocContext, Module
                   , NamedThing(..), Name, isValName, RealSrcLoc)
+import PrelNames ( wildCardName )
 import Name
+import UniqFM (nonDetUFMToList, listToUFM_Directly, plusUFM )
+import Control.Arrow (first)
 import qualified SrcLoc as GHC
 import Module hiding (getModule)
 import qualified GhcPlugins as GHC ( getModule, Expr(..) )
@@ -222,9 +226,12 @@ whatCore (PCoreExpr e) ss =
   case e of
     GHC.Lam b eb -> do
       let (bs, _e') = collectBinders eb
-      (\d -> XRefs d (const [])) <$> mapM (goMakeDecl ss) (b:bs)
+      (\d -> XRefs d (const [])) <$> mapMaybeM (goMakeDecl ss) (b:bs)
     GHC.Let b _e ->
       (\d -> XRefs d (const [])) <$> makeDecl b ss
+    GHC.Case _ b _ as -> do
+      let binders = concatMap (\(_, bs, _) -> bs) as
+      (\d -> XRefs d (const [])) <$> mapMaybeM (goMakeDecl ss) (b:binders) -- Not sure what this b is fore
     _ -> return mempty
 {-
   case e of
@@ -259,7 +266,7 @@ makeReferenceTick outf cm n ss nenv =
     -- For debugging for now
     Nothing -> do
       -- Names without local definitions
-      traceM ("Couldn't find name in nameenv: " ++ show (getOccString n) ++ show ss)
+--      traceM ("Couldn't find name in nameenv: " ++ show (getOccString n) ++ show ss)
       let refTargetTick = nameInModuleToTick Nothing outf cm n
           refSourceSpan = ss
           refHighLevelContext = Nothing
@@ -274,25 +281,31 @@ makeReferenceTick outf cm n ss nenv =
       in Just $ TickReference{..}
 
 
-makeDecl :: forall b . (OutputableBndr b, NamedThing b) => Bind b -> SrcSpan -> Output [Decl]
+makeDecl :: forall b . (NamedThing b) => Bind b -> SrcSpan -> Output [Decl]
 makeDecl bi  ss =
   case bi of
-    NonRec b _eb -> singleton <$> goMakeDecl ss b
-    Rec bs -> mapM (goMakeDecl ss . fst) bs
+    NonRec b _eb -> maybeToList <$> goMakeDecl ss b
+    Rec bs -> mapMaybeM (goMakeDecl ss . fst) bs
 
-goMakeDecl :: NamedThing b => SrcSpan -> b -> Output Decl
+goMakeDecl :: NamedThing b => SrcSpan -> b -> Output (Maybe Decl)
 goMakeDecl ss b =
       let
           declType = StringyType "" ""
           declExtra = Nothing
+          name = getName b
       in do
-        declTick <- makeDeclTick (getName b) (cvtSrcSpan ss)
-        nameMap %= (\n -> extendNameEnv n (getName b) declTick)
-        declIdentifierSpan <- uses binderMap (\n -> lookupNameEnv n (getName b))
-        return Decl{..}
+        declIdentifierSpan <- uses binderMap (\n -> lookupNameEnv n (name))
+        case declIdentifierSpan of
+          Nothing -> do
+            traceShowM ((nameOccurenceText $ name), declIdentifierSpan)
+            return Nothing
+          Just ss -> do
+            declTick <- makeDeclTick (name) ss
+            nameMap %= (\n -> extendNameEnv n (name) declTick)
+            return (Just $ Decl{..})
 
 nameInModuleToTick :: Maybe Span -> FilePath -> Module -> Name -> Tick
-nameInModuleToTick ss sourcePath cm n = do
+nameInModuleToTick ss sourcePath cm n =
     Tick
       { tickSourcePath = makeSourcePath sourcePath
       , tickPkgModule = makePkgModule (nameModuleWithInternal cm n)
@@ -379,3 +392,7 @@ varInt n
 
 singleton :: a -> [a]
 singleton = (:[])
+
+mapMaybeM :: Monad m => (a -> m (Maybe b)) -> [a] -> m [b]
+mapMaybeM f xs = catMaybes <$> mapM f xs
+
