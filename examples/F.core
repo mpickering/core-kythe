@@ -1,0 +1,32 @@
+
+myId  :: forall p .   p -> p
+[LclIdX,
+Arity=1,
+Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=ALWAYS_IF(arity=1,unsat_ok=True,boring_ok=True)
+}]
+myId = \ (@ p) (x  :: p) -> x
+
+
+$trModule_sWV  :: Addr#
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0 }]
+$trModule_sWV = "main"#
+
+
+$trModule_sWU  :: TrName
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$trModule_sWU = TrNameS $trModule_sWV
+
+
+$trModule_sWX  :: Addr#
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0 }]
+$trModule_sWX = "F"#
+
+
+$trModule_sWW  :: TrName
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$trModule_sWW = TrNameS $trModule_sWX
+
+
+$trModule  :: Module
+[LclIdX, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$trModule = Module $trModule_sWU $trModule_sWW

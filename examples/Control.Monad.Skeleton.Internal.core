@@ -1,0 +1,344 @@
+Rec {
+
+transCat [InlPrag=INLINE (sat-args=2) , Occ=LoopBreaker]
+:: forall k1 (j :: k1 -> k1 -> *) (k2 :: k1 -> k1 -> *) (a :: k1) (b :: k1) . 
+  
+  (forall (x :: k1) (y :: k1) .   j x y -> k2 x y) -> Cat j a b -> Cat k2 a b
+[LclIdX,
+Arity=2,
+Str=<L,C(U)><S,1*U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=2,unsat_ok=False,boring_ok=False)
+Tmpl= \ (@ k)
+(@ (j :: k -> k -> *))
+(@ (k :: k -> k -> *))
+(@ (a :: k))
+(@ (b :: k))
+(f  :: forall (x :: k) (y :: k) .   j x y -> k1 x y)
+(ds_d1av [Occ=Once!] :: Cat j a b) ->
+case ds_d1av  of  {
+  Leaf k [Occ=Once] -> Leaf @ k @ k1 @ a @ b (f @ a @ b k);
+    Tree @ b a [Occ=Once] b [Occ=Once] -> Tree @ k @ k1 @ a @ b @ b (transCat @ k @ j @ k1 @ a @ b f a) (transCat @ k @ j @ k1 @ b @ b f b)
+  }}]
+transCat
+= \ (@ k)
+  (@ (j :: k -> k -> *))
+  (@ (k :: k -> k -> *))
+  (@ (a :: k))
+  (@ (b :: k))
+  (f [Dmd=<L,C(U)>] :: forall (x :: k) (y :: k) .   j x y -> k1 x y)
+  (ds_d1av [Dmd=<S,1*U>] :: Cat j a b) ->
+  case ds_d1av  of  {
+    Leaf k  -> Leaf @ k @ k1 @ a @ b (f @ a @ b k);
+      Tree @ b a [Dmd=<L,1*U>] b [Dmd=<L,1*U>] -> Tree @ k @ k1 @ a @ b @ b (transCat @ k @ j @ k1 @ a @ b f a) (transCat @ k @ j @ k1 @ b @ b f b)
+    }
+
+end Rec }
+
+
+|> [InlPrag=INLINE (sat-args=2) ] :: forall k1 (k2 :: k1 -> k1 -> *) (a :: k1) (b :: k1) (c :: k1) .   Cat k2 a b -> k2 b c -> Cat k2 a c
+[LclIdX,
+Arity=2,
+Str=<L,U><L,U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=2,unsat_ok=False,boring_ok=False)
+Tmpl= \ (@ k) (@ (k :: k -> k -> *)) (@ (a :: k)) (@ (b :: k)) (@ (c :: k)) (s [Occ=Once] :: Cat k1 a b) (k [Occ=Once] :: k1 b c) ->
+Tree @ k @ k1 @ a @ c @ b s (Leaf @ k @ k1 @ b @ c k)}]
+|>
+= \ (@ k) (@ (k :: k -> k -> *)) (@ (a :: k)) (@ (b :: k)) (@ (c :: k)) (s  :: Cat k1 a b) (k  :: k1 b c) ->
+  Tree @ k @ k1 @ a @ c @ b s (Leaf @ k @ k1 @ b @ c k)
+
+
+viewL 
+:: forall k1 (k2 :: k1 -> k1 -> *) (a :: k1) (b :: k1) r .   Cat k2 a b -> (k2 a b -> r) -> (forall (x :: k1) .   k2 a x -> Cat k2 x b -> r) -> r
+[LclIdX,
+Arity=3,
+Str=<S,1*U><L,1*C1(U)><L,C(C1(U))> ,
+Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [50 60 60] 112 0
+}]
+viewL
+= \ (@ k)
+  (@ (k :: k -> k -> *))
+  (@ (a :: k))
+  (@ (b :: k))
+  (@ r)
+  (ds_d1ad [Dmd=<S,1*U>] :: Cat k1 a b)
+  (e [Dmd=<L,1*C1(U)>] :: k1 a b -> r)
+  (ds_d1ae [Dmd=<L,C(C1(U))>] :: forall (x :: k) .   k1 a x -> Cat k1 x b -> r) ->
+  case ds_d1ad  of  {
+    Leaf k  -> e k;
+      Tree @ b a [Dmd=<S,1*U>] b  ->
+      joinrec {
+        
+          go [Occ=LoopBreaker] :: forall (x :: k) .   Cat k1 a x -> Cat k1 x b -> r
+          [LclId[JoinId(3)],
+          Arity=2,
+          Str=<S,1*U><L,U> {d1ae-><C(C(S)),C(C1(U))>},
+          Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [46 0] 66 0
+          }]
+          go (@ (x :: k)) (ds_d1an [Dmd=<S,1*U>] :: Cat k1 a x) (t  :: Cat k1 x b)
+          = case ds_d1an  of  { Leaf k  -> ds_d1ae @ x k t;Tree @ b c [Dmd=<S,1*U>] d  -> jump go @ b c (Tree @ k @ k1 @ b @ b @ x d t) }; } in
+        jump go @ b a b
+    }
+
+
+transKleisli_s1aW  :: forall (m :: * -> *) b (n :: * -> *) a .   (m b -> n b) -> (Any -> m b) -> Any -> n b
+[LclId,
+Arity=3,
+Str=<L,C(U)> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=1,unsat_ok=True,boring_ok=True)
+Tmpl= \ (@ (m :: * -> *)) (@ b) (@ (n :: * -> *)) (@ a) (f [Occ=Once] :: m b -> n b) -> . @ (m b) @ (n b) @ Any f}]
+transKleisli_s1aW = \ (@ (m :: * -> *)) (@ b) (@ (n :: * -> *)) (@ a) (f [Dmd=<L,C(U)>] :: m b -> n b) -> . @ (m b) @ (n b) @ Any f
+
+
+transKleisli [InlPrag=INLINE (sat-args=1) ] :: forall (m :: * -> *) b (n :: * -> *) a .   (m b -> n b) -> Kleisli m a b -> Kleisli n a b
+[LclIdX,
+Arity=3,
+Str=<L,C(U)> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=1,unsat_ok=False,boring_ok=True)
+Tmpl= (\ (@ (m :: * -> *)) (@ b) (@ (n :: * -> *)) (@ a) (f [Occ=Once] :: m b -> n b) -> . @ (m b) @ (n b) @ Any f)
+`cast` (forall (m :: <* -> *>_N).
+forall (b :: <*>_N).
+forall (n :: <* -> *>_N).
+forall (a :: <*>_N).
+<m b -> n b>_R -> UnsafeCo representational (Any -> m b) (Kleisli m a b) -> UnsafeCo representational (Any -> n b) (Kleisli n a b)
+:: Coercible
+(forall (m :: * -> *) b (n :: * -> *) a .   (m b -> n b) -> (Any -> m b) -> Any -> n b)
+  (forall (m :: * -> *) b (n :: * -> *) a .   (m b -> n b) -> Kleisli m a b -> Kleisli n a b))}]
+transKleisli
+= transKleisli_s1aW
+  `cast` (forall (m :: <* -> *>_N).
+  forall (b :: <*>_N).
+  forall (n :: <* -> *>_N).
+  forall (a :: <*>_N).
+  <m b -> n b>_R -> UnsafeCo representational (Any -> m b) (Kleisli m a b) -> UnsafeCo representational (Any -> n b) (Kleisli n a b)
+  :: Coercible
+  (forall (m :: * -> *) b (n :: * -> *) a .   (m b -> n b) -> (Any -> m b) -> Any -> n b)
+    (forall (m :: * -> *) b (n :: * -> *) a .   (m b -> n b) -> Kleisli m a b -> Kleisli n a b))
+
+
+$trModule_s1aY  :: Addr#
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 120 0 }]
+$trModule_s1aY = "monad-skeleton-0.1.4-DJ78ErZbPM05ZAVKZBGAZT"#
+
+
+$trModule_s1aX  :: TrName
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$trModule_s1aX = TrNameS $trModule_s1aY
+
+
+$trModule_s1b0  :: Addr#
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 90 0 }]
+$trModule_s1b0 = "Control.Monad.Skeleton.Internal"#
+
+
+$trModule_s1aZ  :: TrName
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$trModule_s1aZ = TrNameS $trModule_s1b0
+
+
+$trModule  :: Module
+[LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$trModule = Module $trModule_s1aX $trModule_s1aZ
+
+
+$krep_a19W [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$krep_a19W = KindRepVar 0#
+
+
+$krep_a19X [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a19X = KindRepFun $krep_a19W krep$*
+
+
+$krep_a19V [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a19V = KindRepFun $krep_a19W $krep_a19X
+
+
+$krep_a19U [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a19U = KindRepFun $krep_a19V $krep_a19V
+
+
+$krep_a1a1 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$krep_a1a1 = KindRepVar 1#
+
+
+$krep_a1a7 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$krep_a1a7 = KindRepVar 4#
+
+
+$krep_a1a3 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$krep_a1a3 = KindRepVar 3#
+
+
+$krep_a1a2 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$krep_a1a2 = KindRepVar 2#
+
+
+$krep_a1a0 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m3 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a1a0 = KindRepApp $krep_a1a1 $krep_a1a2
+
+
+$krep_a19Z [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m3 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a19Z = KindRepApp $krep_a1a0 $krep_a1a3
+
+
+$tcCat_s1b2  :: Addr#
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0 }]
+$tcCat_s1b2 = "Cat"#
+
+
+$tcCat_s1b1  :: TrName
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$tcCat_s1b1 = TrNameS $tcCat_s1b2
+
+
+$tcCat  :: TyCon
+[LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 70 }]
+$tcCat = TyCon 5513450491376921206## 3929707770725955839## $trModule $tcCat_s1b1 1# $krep_a19U
+
+
+$krep_s1b6  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s1b6 = : @ KindRep $krep_a1a3 ([] @ KindRep)
+
+
+$krep_s1b5  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s1b5 = : @ KindRep $krep_a1a2 $krep_s1b6
+
+
+$krep_s1b4  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s1b4 = : @ KindRep $krep_a1a1 $krep_s1b5
+
+
+$krep_s1b3  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s1b3 = : @ KindRep $krep_a19W $krep_s1b4
+
+
+$krep_a1a4 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a1a4 = KindRepTyConApp $tcCat $krep_s1b3
+
+
+$krep_a19Y [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a19Y = KindRepFun $krep_a19Z $krep_a1a4
+
+
+$tc'Leaf_s1b8  :: Addr#
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0 }]
+$tc'Leaf_s1b8 = "'Leaf"#
+
+
+$tc'Leaf_s1b7  :: TrName
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$tc'Leaf_s1b7 = TrNameS $tc'Leaf_s1b8
+
+
+$tc'Leaf  :: TyCon
+[LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 70 }]
+$tc'Leaf = TyCon 14106383816334533728## 4688076793716977457## $trModule $tc'Leaf_s1b7 4# $krep_a19Y
+
+
+$krep_s1bc  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s1bc = : @ KindRep $krep_a1a7 ([] @ KindRep)
+
+
+$krep_s1bb  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s1bb = : @ KindRep $krep_a1a2 $krep_s1bc
+
+
+$krep_s1ba  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s1ba = : @ KindRep $krep_a1a1 $krep_s1bb
+
+
+$krep_s1b9  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s1b9 = : @ KindRep $krep_a19W $krep_s1ba
+
+
+$krep_a1a6 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a1a6 = KindRepTyConApp $tcCat $krep_s1b9
+
+
+$krep_s1bf  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s1bf = : @ KindRep $krep_a1a7 $krep_s1b6
+
+
+$krep_s1be  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s1be = : @ KindRep $krep_a1a1 $krep_s1bf
+
+
+$krep_s1bd  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s1bd = : @ KindRep $krep_a19W $krep_s1be
+
+
+$krep_a1a9 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a1a9 = KindRepTyConApp $tcCat $krep_s1bd
+
+
+$krep_a1a8 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a1a8 = KindRepFun $krep_a1a9 $krep_a1a4
+
+
+$krep_a1a5 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a1a5 = KindRepFun $krep_a1a6 $krep_a1a8
+
+
+$tc'Tree_s1bi  :: Addr#
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0 }]
+$tc'Tree_s1bi = "'Tree"#
+
+
+$tc'Tree_s1bh  :: TrName
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$tc'Tree_s1bh = TrNameS $tc'Tree_s1bi
+
+
+$tc'Tree  :: TyCon
+[LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 70 }]
+$tc'Tree = TyCon 11771908004650308412## 9768009966442525830## $trModule $tc'Tree_s1bh 5# $krep_a1a5

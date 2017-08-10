@@ -1,0 +1,1313 @@
+
+$cfmap [InlPrag=INLINE (sat-args=2) ]
+:: forall (m :: * -> *) (t :: * -> *) .  Functor m => forall a b .   (a -> b) -> MonadView t m a -> MonadView t m b
+[LclId,
+Arity=3,
+Str=<L,1*U(1*C1(C(U)),A)><L,U><S,1*U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=3,unsat_ok=False,boring_ok=False)
+Tmpl= \ (@ (m :: * -> *))
+(@ (t :: * -> *))
+($dFunctor_a26H [Occ=Once] :: Functor m)
+(@ a)
+(@ b)
+(f [Occ=Once*] :: a -> b)
+(ds_d2av [Occ=Once!] :: MonadView t m a) ->
+case ds_d2av  of  {
+  Return a [Occ=Once] -> Return @ t @ m @ b (f a);
+    :>>= @ a t [Occ=Once] k [Occ=OnceL!] ->
+    $W:>>=
+      @ t
+        @ m
+        @ b
+        @ a
+        t
+        (let {
+        
+          f [Occ=OnceL!] :: m a -> m b
+          [LclId, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=False, ConLike=False, WorkFree=False, Expandable=False, Guidance=IF_ARGS [] 30 0 }]
+          f = fmap @ m $dFunctor_a26H @ a @ b f } in
+        \ (x [Occ=Once] :: a) -> f (k x))
+  }}]
+$cfmap
+= \ (@ (m :: * -> *))
+  (@ (t :: * -> *))
+  ($dFunctor_a26H [Dmd=<L,1*U(1*C1(C(U)),A)>] :: Functor m)
+  (@ a)
+  (@ b)
+  (eta_B2  :: a -> b)
+  (eta_B1 [Dmd=<S,1*U>] :: MonadView t m a) ->
+  case eta_B1  of  {
+    Return a  -> Return @ t @ m @ b (eta_B2 a);
+      :>>= @ a t  k [Dmd=<L,C(U)>] ->
+      :>>=
+        @ t
+          @ m
+          @ b
+          @ a
+          t
+          (let {
+          
+            f [Dmd=<L,C(U)>] :: m a -> m b
+            [LclId, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=False, ConLike=False, WorkFree=False, Expandable=False, Guidance=IF_ARGS [] 30 0 }]
+            f = fmap @ m $dFunctor_a26H @ a @ b eta_B2 } in
+          \ (x  :: a) -> f (k x))
+    }
+
+
+$c<$  :: forall (m :: * -> *) (t :: * -> *) .  Functor m => forall a b .   a -> MonadView t m b -> MonadView t m a
+[LclId,
+Arity=3,
+Str=<L,1*U(1*C1(C(U)),A)><L,U><S,1*U> ,
+Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [30 0 40] 140 50
+}]
+$c<$
+= \ (@ (m :: * -> *))
+  (@ (t :: * -> *))
+  ($dFunctor_a26H [Dmd=<L,1*U(1*C1(C(U)),A)>] :: Functor m)
+  (@ a)
+  (@ b)
+  (x  :: a)
+  (eta_B1 [Dmd=<S,1*U>] :: MonadView t m b) ->
+  case eta_B1  of  {
+    Return a [Dmd=<L,A>] -> Return @ t @ m @ a x;
+      :>>= @ a t  k [Dmd=<L,C(U)>] ->
+      :>>=
+        @ t
+          @ m
+          @ a
+          @ a
+          t
+          (let {
+          
+            f [Dmd=<L,C(U)>] :: m b -> m a
+            [LclId, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=False, ConLike=False, WorkFree=False, Expandable=False, Guidance=IF_ARGS [] 40 0 }]
+            f = fmap @ m $dFunctor_a26H @ b @ a (\ _ [Occ=Dead, Dmd=<L,A>] -> x) } in
+          \ (x  :: a) -> f (k x))
+    }
+
+
+$fFunctorMonadView [InlPrag=  CONLIKE] :: forall (m :: * -> *) (t :: * -> *) .  Functor m => Functor (MonadView t m)
+[LclIdX[DFunId],
+Arity=1,
+Str=<L,U(C(C(U)),A)>m ,
+Unf=DFun: \ (@ (m :: * -> *)) (@ (t :: * -> *)) (v_B1  :: Functor m) -> C:Functor TYPE: MonadView t m $cfmap @ m @ t v_B1 $c<$ @ m @ t v_B1]
+$fFunctorMonadView
+= \ (@ (m :: * -> *)) (@ (t :: * -> *)) ($dFunctor_a26H [Dmd=<L,U(C(C(U)),A)>] :: Functor m) ->
+  C:Functor @ (MonadView t m) ($cfmap @ m @ t $dFunctor_a26H) ($c<$ @ m @ t $dFunctor_a26H)
+
+
+$c>>=  :: forall (t :: * -> *) a b .   Skeleton t a -> (a -> Skeleton t b) -> Skeleton t b
+[LclId,
+Arity=2,
+Str=<S,1*U><L,U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=2,unsat_ok=True,boring_ok=False)
+Tmpl= \ (@ (t :: * -> *)) (@ a) (@ b) (ds_d2ah [Occ=Once!] :: Skeleton t a) (k [Occ=Once*] :: a -> Skeleton t b) ->
+case ds_d2ah  of  {
+  ReturnS a [Occ=Once] -> k a;
+    BindS @ a t [Occ=Once] c [Occ=Once] ->
+    BindS
+      @ t
+        @ b
+        @ a
+        t
+        (|>
+        @ *
+          @ (Kleisli (Skeleton t))
+          @ a
+          @ a
+          @ b
+          c
+          (k `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a>_R <b>_N) :: Coercible (a -> Skeleton t b) (Kleisli (Skeleton t) a b))))
+  }}]
+$c>>=
+= \ (@ (t :: * -> *)) (@ a) (@ b) (ds_d2ah [Dmd=<S,1*U>] :: Skeleton t a) (k  :: a -> Skeleton t b) ->
+  case ds_d2ah  of  {
+    ReturnS a  -> k a;
+      BindS @ a t  c  ->
+      BindS
+        @ t
+          @ b
+          @ a
+          t
+          (|>
+          @ *
+            @ (Kleisli (Skeleton t))
+            @ a
+            @ a
+            @ b
+            c
+            (k `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a>_R <b>_N) :: Coercible (a -> Skeleton t b) (Kleisli (Skeleton t) a b))))
+    }
+
+
+$c>> [InlPrag=INLINE (sat-args=2) ] :: forall (t :: * -> *) a b .   Skeleton t a -> Skeleton t b -> Skeleton t b
+[LclId,
+Arity=2,
+Str=<S,1*U><L,U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=2,unsat_ok=False,boring_ok=False)
+Tmpl= \ (@ (t :: * -> *)) (@ a) (@ b) (m1 [Occ=Once!] :: Skeleton t a) (k [Occ=OnceL*] :: Skeleton t b) ->
+case m1  of  {
+  ReturnS _ [Occ=Dead] -> k;
+    BindS @ a t [Occ=Once] c [Occ=Once] ->
+    BindS
+      @ t
+        @ b
+        @ a
+        t
+        (Tree
+        @ *
+          @ (Kleisli (Skeleton t))
+          @ a
+          @ b
+          @ a
+          c
+          (Leaf
+          @ *
+            @ (Kleisli (Skeleton t))
+            @ a
+            @ b
+            ((\ _ [Occ=Dead] -> k)
+            `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a>_R <b>_N) :: Coercible (a -> Skeleton t b) (Kleisli (Skeleton t) a b)))))
+  }}]
+$c>>
+= \ (@ (t :: * -> *)) (@ a) (@ b) (eta_B2 [Dmd=<S,1*U>] :: Skeleton t a) (eta_B1  :: Skeleton t b) ->
+  case eta_B2  of  {
+    ReturnS a [Dmd=<L,A>] -> eta_B1;
+      BindS @ a t  c  ->
+      BindS
+        @ t
+          @ b
+          @ a
+          t
+          (Tree
+          @ *
+            @ (Kleisli (Skeleton t))
+            @ a
+            @ b
+            @ a
+            c
+            (Leaf
+            @ *
+              @ (Kleisli (Skeleton t))
+              @ a
+              @ b
+              ((\ _ [Occ=Dead, Dmd=<L,A>] -> eta_B1)
+              `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a>_R <b>_N) :: Coercible (a -> Skeleton t b) (Kleisli (Skeleton t) a b)))))
+    }
+
+
+$c<*  :: forall (t :: * -> *) a b .   Skeleton t a -> Skeleton t b -> Skeleton t a
+[LclId,
+Arity=2,
+Str=<S,1*U><L,U> ,
+Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [90 60] 200 60
+}]
+$c<*
+= \ (@ (t :: * -> *)) (@ a) (@ b) (a [Dmd=<S,1*U>] :: Skeleton t a) (b  :: Skeleton t b) ->
+  case a  of wild_X11  {
+    ReturnS a  ->
+      case b  of  {
+        ReturnS a [Dmd=<L,A>] -> wild_X11;
+          BindS @ a t  c  ->
+          BindS
+            @ t
+              @ a
+              @ a
+              t
+              (Tree
+              @ *
+                @ (Kleisli (Skeleton t))
+                @ a
+                @ a
+                @ b
+                c
+                (Leaf
+                @ *
+                  @ (Kleisli (Skeleton t))
+                  @ b
+                  @ a
+                  ((\ _ [Occ=Dead, Dmd=<L,A>] -> wild_X11)
+                  `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <b>_R <a>_N) :: Coercible (b -> Skeleton t a) (Kleisli (Skeleton t) b a)))))
+        };
+      BindS @ a t  c  ->
+      BindS
+        @ t
+          @ a
+          @ a
+          t
+          (Tree
+          @ *
+            @ (Kleisli (Skeleton t))
+            @ a
+            @ a
+            @ a
+            c
+            (Leaf
+            @ *
+              @ (Kleisli (Skeleton t))
+              @ a
+              @ a
+              ((\ (x  :: a) ->
+              let {
+                
+                  k  :: Skeleton t a
+                  [LclId, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+                  k = ReturnS @ t @ a x } in
+                case b  of  {
+                ReturnS a [Dmd=<L,A>] -> k;
+                  BindS @ a t  c  ->
+                  BindS
+                    @ t
+                      @ a
+                      @ a
+                      t
+                      (Tree
+                      @ *
+                        @ (Kleisli (Skeleton t))
+                        @ a
+                        @ a
+                        @ b
+                        c
+                        (Leaf
+                        @ *
+                          @ (Kleisli (Skeleton t))
+                          @ b
+                          @ a
+                          ((\ _ [Occ=Dead, Dmd=<L,A>] -> k)
+                          `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <b>_R <a>_N) :: Coercible (b -> Skeleton t a) (Kleisli (Skeleton t) b a)))))
+                })
+              `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a>_R <a>_N) :: Coercible (a -> Skeleton t a) (Kleisli (Skeleton t) a a)))))
+    }
+
+
+$cfmap [InlPrag=INLINE (sat-args=0) ] :: forall (t :: * -> *) a b .   (a -> b) -> Skeleton t a -> Skeleton t b
+[LclId,
+Arity=2,
+Str=<L,C(U)><S,1*U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=0,unsat_ok=False,boring_ok=False)
+Tmpl= \ (@ (t :: * -> *)) (@ a) (@ b) (f [Occ=OnceL*!] :: a -> b) (m1 [Occ=Once!] :: Skeleton t a) ->
+case m1  of  {
+  ReturnS a [Occ=Once] -> ReturnS @ t @ b (f a);
+    BindS @ a t [Occ=Once] c [Occ=Once] ->
+    BindS
+      @ t
+        @ b
+        @ a
+        t
+        (Tree
+        @ *
+          @ (Kleisli (Skeleton t))
+          @ a
+          @ b
+          @ a
+          c
+          (Leaf
+          @ *
+            @ (Kleisli (Skeleton t))
+            @ a
+            @ b
+            ((\ (x1 [Occ=Once] :: a) -> ReturnS @ t @ b (f x1))
+            `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a>_R <b>_N) :: Coercible (a -> Skeleton t b) (Kleisli (Skeleton t) a b)))))
+  }}]
+$cfmap
+= \ (@ (t :: * -> *)) (@ a) (@ b) (f [Dmd=<L,C(U)>] :: a -> b) (m1 [Dmd=<S,1*U>] :: Skeleton t a) ->
+  case m1  of  {
+    ReturnS a  -> ReturnS @ t @ b (f a);
+      BindS @ a t  c  ->
+      BindS
+        @ t
+          @ b
+          @ a
+          t
+          (Tree
+          @ *
+            @ (Kleisli (Skeleton t))
+            @ a
+            @ b
+            @ a
+            c
+            (Leaf
+            @ *
+              @ (Kleisli (Skeleton t))
+              @ a
+              @ b
+              ((\ (x1  :: a) -> ReturnS @ t @ b (f x1))
+              `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a>_R <b>_N) :: Coercible (a -> Skeleton t b) (Kleisli (Skeleton t) a b)))))
+    }
+
+
+$c<$  :: forall (t :: * -> *) a b .   a -> Skeleton t b -> Skeleton t a
+[LclId,
+Arity=2,
+Str=<L,U><S,1*U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=2,unsat_ok=True,boring_ok=False)
+Tmpl= \ (@ (t :: * -> *)) (@ a) (@ b) (x [Occ=OnceL*] :: a) (eta_B1 [Occ=Once!] :: Skeleton t b) ->
+case eta_B1  of  {
+  ReturnS _ [Occ=Dead] -> ReturnS @ t @ a x;
+    BindS @ a t [Occ=Once] c [Occ=Once] ->
+    let {
+      
+        lvl_s2iC [Occ=OnceL] :: Skeleton t a
+        [LclId, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+        lvl_s2iC = ReturnS @ t @ a x } in
+      BindS
+      @ t
+        @ a
+        @ a
+        t
+        (Tree
+        @ *
+          @ (Kleisli (Skeleton t))
+          @ a
+          @ a
+          @ b
+          c
+          (Leaf
+          @ *
+            @ (Kleisli (Skeleton t))
+            @ b
+            @ a
+            ((\ _ [Occ=Dead] -> lvl_s2iC)
+            `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <b>_R <a>_N) :: Coercible (b -> Skeleton t a) (Kleisli (Skeleton t) b a)))))
+  }}]
+$c<$
+= \ (@ (t :: * -> *)) (@ a) (@ b) (x  :: a) (eta_B1 [Dmd=<S,1*U>] :: Skeleton t b) ->
+  case eta_B1  of  {
+    ReturnS a [Dmd=<L,A>] -> ReturnS @ t @ a x;
+      BindS @ a t  c  ->
+      let {
+        
+          lvl_s2iC  :: Skeleton t a
+          [LclId, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+          lvl_s2iC = ReturnS @ t @ a x } in
+        BindS
+        @ t
+          @ a
+          @ a
+          t
+          (Tree
+          @ *
+            @ (Kleisli (Skeleton t))
+            @ a
+            @ a
+            @ b
+            c
+            (Leaf
+            @ *
+              @ (Kleisli (Skeleton t))
+              @ b
+              @ a
+              ((\ _ [Occ=Dead, Dmd=<L,A>] -> lvl_s2iC)
+              `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <b>_R <a>_N) :: Coercible (b -> Skeleton t a) (Kleisli (Skeleton t) b a)))))
+    }
+
+
+$c<*> [InlPrag=INLINE (sat-args=0) ] :: forall (t :: * -> *) a b .   Skeleton t (a -> b) -> Skeleton t a -> Skeleton t b
+[LclId,
+Arity=2,
+Str=<S,1*U><L,U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=0,unsat_ok=False,boring_ok=False)
+Tmpl= \ (@ (t :: * -> *)) (@ a) (@ b) (m1 [Occ=Once!] :: Skeleton t (a -> b)) (m2 [Occ=OnceL!] :: Skeleton t a) ->
+let {
+  
+    k [Occ=Once*] :: (a -> b) -> Skeleton t b
+    [LclId, Arity=1, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [60] 120 50 }]
+    k
+    = \ (x1 [Occ=OnceL*!] :: a -> b) ->
+      case m2  of  {
+        ReturnS a [Occ=Once] -> ReturnS @ t @ b (x1 a);
+          BindS @ a t [Occ=Once] c [Occ=Once] ->
+          BindS
+            @ t
+              @ b
+              @ a
+              t
+              (Tree
+              @ *
+                @ (Kleisli (Skeleton t))
+                @ a
+                @ b
+                @ a
+                c
+                (Leaf
+                @ *
+                  @ (Kleisli (Skeleton t))
+                  @ a
+                  @ b
+                  ((\ (x2 [Occ=Once] :: a) -> ReturnS @ t @ b (x1 x2))
+                  `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a>_R <b>_N) :: Coercible (a -> Skeleton t b) (Kleisli (Skeleton t) a b)))))
+        } } in
+  case m1  of  {
+  ReturnS a [Occ=Once] -> k a;
+    BindS @ a t [Occ=Once] c [Occ=Once] ->
+    BindS
+      @ t
+        @ b
+        @ a
+        t
+        (Tree
+        @ *
+          @ (Kleisli (Skeleton t))
+          @ a
+          @ b
+          @ (a -> b)
+          c
+          (Leaf
+          @ *
+            @ (Kleisli (Skeleton t))
+            @ (a -> b)
+            @ b
+            (k
+            `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a -> b>_R <b>_N) :: Coercible ((a -> b) -> Skeleton t b) (Kleisli (Skeleton t) (a -> b) b)))))
+  }}]
+$c<*>
+= \ (@ (t :: * -> *)) (@ a) (@ b) (m1 [Dmd=<S,1*U>] :: Skeleton t (a -> b)) (m2  :: Skeleton t a) ->
+  let {
+    
+      k  :: (a -> b) -> Skeleton t b
+      [LclId,
+      Arity=1,
+      Str=<L,C(U)> {a2aP-><S,1*U>},
+      Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [60] 120 50
+      }]
+      k
+      = \ (x1 [Dmd=<L,C(U)>] :: a -> b) ->
+        case m2  of  {
+          ReturnS a  -> ReturnS @ t @ b (x1 a);
+            BindS @ a t  c  ->
+            BindS
+              @ t
+                @ b
+                @ a
+                t
+                (Tree
+                @ *
+                  @ (Kleisli (Skeleton t))
+                  @ a
+                  @ b
+                  @ a
+                  c
+                  (Leaf
+                  @ *
+                    @ (Kleisli (Skeleton t))
+                    @ a
+                    @ b
+                    ((\ (x2  :: a) -> ReturnS @ t @ b (x1 x2))
+                    `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a>_R <b>_N) :: Coercible (a -> Skeleton t b) (Kleisli (Skeleton t) a b)))))
+          } } in
+    case m1  of  {
+    ReturnS a [Dmd=<L,C(U)>] -> k a;
+      BindS @ a t  c  ->
+      BindS
+        @ t
+          @ b
+          @ a
+          t
+          (Tree
+          @ *
+            @ (Kleisli (Skeleton t))
+            @ a
+            @ b
+            @ (a -> b)
+            c
+            (Leaf
+            @ *
+              @ (Kleisli (Skeleton t))
+              @ (a -> b)
+              @ b
+              (k
+              `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a -> b>_R <b>_N) :: Coercible ((a -> b) -> Skeleton t b) (Kleisli (Skeleton t) (a -> b) b)))))
+    }
+
+
+$cliftA2  :: forall (t :: * -> *) a b c .   (a -> b -> c) -> Skeleton t a -> Skeleton t b -> Skeleton t c
+[LclId,
+Arity=2,
+Str=<L,C(U)><L,1*U> ,
+Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [60 60] 350 60
+}]
+$cliftA2
+= \ (@ (t :: * -> *)) (@ a) (@ b) (@ c) (f1 [Dmd=<L,C(U)>] :: a -> b -> c) (x [Dmd=<L,1*U>] :: Skeleton t a) ->
+  let {
+    
+      m1  :: Skeleton t (b -> c)
+      [LclId, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=False, ConLike=False, WorkFree=False, Expandable=False, Guidance=IF_ARGS [] 120 50 }]
+      m1
+      = case x  of  {
+        ReturnS a  -> ReturnS @ t @ (b -> c) (f1 a);
+          BindS @ a t  c  ->
+          BindS
+            @ t
+              @ (b -> c)
+              @ a
+              t
+              (Tree
+              @ *
+                @ (Kleisli (Skeleton t))
+                @ a
+                @ (b -> c)
+                @ a
+                c
+                (Leaf
+                @ *
+                  @ (Kleisli (Skeleton t))
+                  @ a
+                  @ (b -> c)
+                  ((\ (x1  :: a) -> ReturnS @ t @ (b -> c) (f1 x1))
+                  `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a>_R <b -> c>_N)
+                  :: Coercible (a -> Skeleton t (b -> c)) (Kleisli (Skeleton t) a (b -> c))))))
+        } } in
+    \ (m2  :: Skeleton t b) ->
+    let {
+      
+        k  :: (b -> c) -> Skeleton t c
+        [LclId,
+        Arity=1,
+        Str=<L,C(U)> {a2aP-><S,1*U>},
+        Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [60] 120 50
+        }]
+        k
+        = \ (x1 [Dmd=<L,C(U)>] :: b -> c) ->
+          case m2  of  {
+            ReturnS a  -> ReturnS @ t @ c (x1 a);
+              BindS @ a t  c  ->
+              BindS
+                @ t
+                  @ c
+                  @ a
+                  t
+                  (Tree
+                  @ *
+                    @ (Kleisli (Skeleton t))
+                    @ a
+                    @ c
+                    @ b
+                    c
+                    (Leaf
+                    @ *
+                      @ (Kleisli (Skeleton t))
+                      @ b
+                      @ c
+                      ((\ (x2  :: b) -> ReturnS @ t @ c (x1 x2))
+                      `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <b>_R <c>_N) :: Coercible (b -> Skeleton t c) (Kleisli (Skeleton t) b c)))))
+            } } in
+      case m1  of  {
+      ReturnS a [Dmd=<L,C(U)>] -> k a;
+        BindS @ a t  c  ->
+        BindS
+          @ t
+            @ c
+            @ a
+            t
+            (Tree
+            @ *
+              @ (Kleisli (Skeleton t))
+              @ a
+              @ c
+              @ (b -> c)
+              c
+              (Leaf
+              @ *
+                @ (Kleisli (Skeleton t))
+                @ (b -> c)
+                @ c
+                (k
+                `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <b -> c>_R <c>_N)
+                :: Coercible ((b -> c) -> Skeleton t c) (Kleisli (Skeleton t) (b -> c) c)))))
+      }
+
+
+$fFunctorSkeleton [InlPrag=  CONLIKE] :: forall (t :: * -> *) .   Functor (Skeleton t)
+[LclIdX[DFunId], Str=m , Unf=DFun: \ (@ (t :: * -> *)) -> C:Functor TYPE: Skeleton t $cfmap @ t $c<$ @ t]
+$fFunctorSkeleton = \ (@ (t :: * -> *)) -> C:Functor @ (Skeleton t) ($cfmap @ t) ($c<$ @ t)
+
+
+$fApplicativeSkeleton [InlPrag=  CONLIKE] :: forall (t :: * -> *) .   Applicative (Skeleton t)
+[LclIdX[DFunId],
+Str=m ,
+Unf=DFun: \ (@ (t :: * -> *)) -> C:Applicative TYPE: Skeleton t $fFunctorSkeleton @ t ReturnS @ t $c<*> @ t $cliftA2 @ t $c>> @ t $c<* @ t]
+$fApplicativeSkeleton
+= \ (@ (t :: * -> *)) -> C:Applicative @ (Skeleton t) ($fFunctorSkeleton @ t) (ReturnS @ t) ($c<*> @ t) ($cliftA2 @ t) ($c>> @ t) ($c<* @ t)
+
+
+lvl_s2iD  :: forall (t :: * -> *) a .   [Char] -> Skeleton t a
+[LclId,
+Arity=1,
+Str=<B,U>x ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=1,unsat_ok=True,boring_ok=True)
+Tmpl= \ (@ (t :: * -> *)) (@ a) (eta_B1 [Occ=Once] :: [Char]) -> errorWithoutStackTrace @ 'LiftedRep @ (Skeleton t a) eta_B1}]
+lvl_s2iD = \ (@ (t :: * -> *)) (@ a) (eta_B1 [Dmd=<B,U>] :: [Char]) -> errorWithoutStackTrace @ 'LiftedRep @ (Skeleton t a) eta_B1
+
+
+$fMonadSkeleton [InlPrag=  CONLIKE] :: forall (t :: * -> *) .   Monad (Skeleton t)
+[LclIdX[DFunId],
+Str=m ,
+Unf=DFun: \ (@ (t :: * -> *)) ->
+C:Monad TYPE: Skeleton t $fApplicativeSkeleton @ t $c>>= @ t $c>> @ t ReturnS @ t \ (@ a) -> errorWithoutStackTrace @ 'LiftedRep @ (Skeleton t a)]
+$fMonadSkeleton = \ (@ (t :: * -> *)) -> C:Monad @ (Skeleton t) ($fApplicativeSkeleton @ t) ($c>>= @ t) ($c>> @ t) (ReturnS @ t) (lvl_s2iD @ t)
+
+
+boned [InlPrag=INLINE (sat-args=1) ] :: forall (t :: * -> *) a .   MonadView t (Skeleton t) a -> Skeleton t a
+[LclIdX,
+Arity=1,
+Str=<S,1*U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=1,unsat_ok=False,boring_ok=False)
+Tmpl= \ (@ (t :: * -> *)) (@ a) (ds_d2a9 [Occ=Once!] :: MonadView t (Skeleton t) a) ->
+case ds_d2a9  of  {
+  Return a [Occ=Once] -> ReturnS @ t @ a a;
+    :>>= @ a t [Occ=Once] k [Occ=Once] ->
+    BindS
+      @ t
+        @ a
+        @ a
+        t
+        (Leaf
+        @ *
+          @ (Kleisli (Skeleton t))
+          @ a
+          @ a
+          (k `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a>_R <a>_N) :: Coercible (a -> Skeleton t a1) (Kleisli (Skeleton t) a a1))))
+  }}]
+boned
+= \ (@ (t :: * -> *)) (@ a) (ds_d2a9 [Dmd=<S,1*U>] :: MonadView t (Skeleton t) a) ->
+  case ds_d2a9  of  {
+    Return a  -> ReturnS @ t @ a a;
+      :>>= @ a t  k  ->
+      BindS
+        @ t
+          @ a
+          @ a
+          t
+          (Leaf
+          @ *
+            @ (Kleisli (Skeleton t))
+            @ a
+            @ a
+            (k `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a>_R <a>_N) :: Coercible (a -> Skeleton t a1) (Kleisli (Skeleton t) a a1))))
+    }
+
+Rec {
+
+go [Occ=LoopBreaker] :: forall (t :: * -> *) a b .   Cat (Kleisli (Skeleton t)) a b -> a -> Skeleton t b
+[LclId,
+Arity=2,
+Str=<S,1*U><L,U> ,
+Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [50 0] 172 0
+}]
+go
+= \ (@ (t :: * -> *)) (@ a) (@ b) (c [Dmd=<S,1*U>] :: Cat (Kleisli (Skeleton t)) a b) (a  :: a) ->
+  case c  of  {
+    Leaf k2 [Dmd=<C(S),1*C1(U)>] ->
+      (k2 `cast` (N:Kleisli[0] <Skeleton t>_R <a>_R <b>_N :: Coercible (Kleisli (Skeleton t) a b) (a -> Skeleton t b))) a;
+      Tree @ b1 a1 [Dmd=<S,1*U>] b2  ->
+      joinrec {
+        
+          go [Occ=LoopBreaker] :: forall x .   Cat (Kleisli (Skeleton t)) a x -> Cat (Kleisli (Skeleton t)) x b -> Skeleton t b
+          [LclId[JoinId(3)],
+          Arity=2,
+          Str=<S,1*U><L,U> ,
+          Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [46 0] 126 30
+          }]
+          go (@ x) (ds2 [Dmd=<S,1*U>] :: Cat (Kleisli (Skeleton t)) a x) (t  :: Cat (Kleisli (Skeleton t)) x b)
+          = case ds2  of  {
+            Leaf k2 [Dmd=<C(S),1*C1(U)>] ->
+              case (k2 `cast` (N:Kleisli[0] <Skeleton t>_R <a>_R <x>_N :: Coercible (Kleisli (Skeleton t) a x) (a -> Skeleton t x))) a  of  {
+                ReturnS b  -> go @ t @ x @ b t b;
+                  BindS @ a t'  c''  -> BindS @ t @ b @ a t' (Tree @ * @ (Kleisli (Skeleton t)) @ a @ b @ x c'' t)
+                };
+              Tree @ b3 c [Dmd=<S,1*U>] d  -> jump go @ b3 c (Tree @ * @ (Kleisli (Skeleton t)) @ b3 @ b @ x d t)
+            }; } in
+        jump go @ b1 a1 b2
+    }
+
+end Rec }
+
+
+debone  :: forall (t :: * -> *) a .   Skeleton t a -> MonadView t (Skeleton t) a
+[LclIdX,
+Arity=1,
+Str=<S,1*U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=1,unsat_ok=True,boring_ok=False)
+Tmpl= \ (@ (t :: * -> *)) (@ a) (ds_d29K [Occ=Once!] :: Skeleton t a) ->
+case ds_d29K  of  {
+  ReturnS a [Occ=Once] -> Return @ t @ (Skeleton t) @ a a;
+    BindS @ a t [Occ=Once] c0 [Occ=Once] -> case t  of dt_X1Gj  { __DEFAULT  -> :>>= @ t @ (Skeleton t) @ a @ a dt_X1Gj (go @ t @ a @ a c0) }
+  }}]
+debone
+= \ (@ (t :: * -> *)) (@ a) (ds_d29K [Dmd=<S,1*U>] :: Skeleton t a) ->
+  case ds_d29K  of  {
+    ReturnS a  -> Return @ t @ (Skeleton t) @ a a;
+      BindS @ a t [Dmd=<S,1*U>] c0  -> case t  of dt_X1Gj  { __DEFAULT  -> :>>= @ t @ (Skeleton t) @ a @ a dt_X1Gj (go @ t @ a @ a c0) }
+    }
+
+
+deboneBy [InlPrag=INLINE (sat-args=2) ] :: forall (t :: * -> *) a r .   (MonadView t (Skeleton t) a -> r) -> Skeleton t a -> r
+[LclIdX,
+Arity=2,
+Str=<C(S),1*C1(U)><L,1*U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=2,unsat_ok=False,boring_ok=False)
+Tmpl= \ (@ (t :: * -> *)) (@ a) (@ r) (f [Occ=Once!] :: MonadView t (Skeleton t) a -> r) (s [Occ=Once] :: Skeleton t a) -> f (debone @ t @ a s)}]
+deboneBy
+= \ (@ (t :: * -> *)) (@ a) (@ r) (f [Dmd=<C(S),1*C1(U)>] :: MonadView t (Skeleton t) a -> r) (s [Dmd=<L,1*U>] :: Skeleton t a) ->
+  f (debone @ t @ a s)
+
+
+unbone [InlPrag=INLINE (sat-args=0) ] :: forall (t :: * -> *) a .   Skeleton t a -> MonadView t (Skeleton t) a
+[LclIdX,
+Arity=1,
+Str=<S,1*U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=0,unsat_ok=False,boring_ok=True)
+Tmpl= debone}]
+unbone = debone
+
+
+lvl_s2iG  :: forall (t :: * -> *) a .   Cat (Kleisli (Skeleton t)) a a
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+lvl_s2iG
+= \ (@ (t :: * -> *)) (@ a) ->
+  Leaf
+    @ *
+      @ (Kleisli (Skeleton t))
+      @ a
+      @ a
+      ((ReturnS @ t @ a) `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a>_R <a>_N) :: Coercible (a -> Skeleton t a) (Kleisli (Skeleton t) a a)))
+
+
+bone [InlPrag=INLINABLE  ] :: forall (t :: * -> *) a .   t a -> Skeleton t a
+[LclIdX,
+Arity=1,
+Str=<L,U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=1,unsat_ok=True,boring_ok=False)
+Tmpl= \ (@ (t :: * -> *)) (@ a) (t [Occ=Once] :: t a) ->
+BindS
+  @ t
+    @ a
+    @ a
+    t
+    (Leaf
+    @ *
+      @ (Kleisli (Skeleton t))
+      @ a
+      @ a
+      ((ReturnS @ t @ a) `cast` (Sym (N:Kleisli[0] <Skeleton t>_R <a>_R <a>_N) :: Coercible (a -> Skeleton t a) (Kleisli (Skeleton t) a a))))}]
+bone = \ (@ (t :: * -> *)) (@ a) (t  :: t a) -> BindS @ t @ a @ a t (lvl_s2iG @ t @ a)
+
+
+hoistSkeleton [InlPrag=INLINE (sat-args=1) ] :: forall (s :: * -> *) (t :: * -> *) a .   (forall x .   s x -> t x) -> Skeleton s a -> Skeleton t a
+[LclIdX,
+Arity=2,
+Str=<L,C(U)><S,1*U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=1,unsat_ok=False,boring_ok=False)
+Tmpl= \ (@ (s :: * -> *)) (@ (t :: * -> *)) (@ a) (f [Occ=OnceL!] :: forall x .   s x -> t x) ->
+letrec {
+  
+    go [Occ=LoopBreaker] :: forall x .   Skeleton s x -> Skeleton t x
+    [LclId, Arity=1, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [40] 110 50 }]
+    go
+    = \ (@ x) (ds_d29C [Occ=Once!] :: Skeleton s x) ->
+      case ds_d29C  of  {
+        ReturnS a [Occ=Once] -> ReturnS @ t @ x a;
+          BindS @ a t [Occ=Once] c [Occ=Once] ->
+          BindS
+            @ t
+              @ x
+              @ a
+              (f @ a t)
+              (transCat
+              @ *
+                @ (Kleisli (Skeleton s))
+                @ (Kleisli (Skeleton t))
+                @ a
+                @ x
+                ((\ (@ x) (@ y) -> . @ (Skeleton s y) @ (Skeleton t y) @ Any (go @ y))
+                `cast` (forall (x :: <*>_N).
+                forall (y :: <*>_N).
+                UnsafeCo representational (Any -> Skeleton s y) (Kleisli (Skeleton s) x y)
+                -> UnsafeCo representational (Any -> Skeleton t y) (Kleisli (Skeleton t) x y)
+                :: Coercible
+                (forall x y .   (Any -> Skeleton s y) -> Any -> Skeleton t y) (forall x y .   Kleisli (Skeleton s) x y -> Kleisli (Skeleton t) x y)))
+                c)
+        }; } in
+  go @ a}]
+hoistSkeleton
+= \ (@ (s :: * -> *)) (@ (t :: * -> *)) (@ a) (f [Dmd=<L,C(U)>] :: forall x .   s x -> t x) (eta_B1 [Dmd=<S,1*U>] :: Skeleton s a) ->
+  letrec {
+    
+      lvl_s2iH  :: forall x y .   (Any -> Skeleton s y) -> Any -> Skeleton t y
+      [LclId, Arity=2, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 60 }]
+      lvl_s2iH = \ (@ x) (@ y) -> . @ (Skeleton s y) @ (Skeleton t y) @ Any (go @ y);
+      
+      go [Occ=LoopBreaker] :: forall x .   Skeleton s x -> Skeleton t x
+      [LclId,
+      Arity=1,
+      Str=<S,1*U> ,
+      Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [40] 90 50
+      }]
+      go
+      = \ (@ x) (ds_d29C [Dmd=<S,1*U>] :: Skeleton s x) ->
+        case ds_d29C  of  {
+          ReturnS a  -> ReturnS @ t @ x a;
+            BindS @ a t  c [Dmd=<L,1*U>] ->
+            BindS
+              @ t
+                @ x
+                @ a
+                (f @ a t)
+                (transCat
+                @ *
+                  @ (Kleisli (Skeleton s))
+                  @ (Kleisli (Skeleton t))
+                  @ a
+                  @ x
+                  (lvl_s2iH
+                  `cast` (forall (x :: <*>_N).
+                  forall (y :: <*>_N).
+                  UnsafeCo representational (Any -> Skeleton s y) (Kleisli (Skeleton s) x y)
+                  -> UnsafeCo representational (Any -> Skeleton t y) (Kleisli (Skeleton t) x y)
+                  :: Coercible
+                  (forall x y .   (Any -> Skeleton s y) -> Any -> Skeleton t y)
+                    (forall x y .   Kleisli (Skeleton s) x y -> Kleisli (Skeleton t) x y)))
+                  c)
+          }; } in
+    go @ a eta_B1
+
+
+hoistMV [InlPrag=INLINE (sat-args=3) ]
+:: forall (s :: * -> *) (t :: * -> *) (m :: * -> *) a (n :: * -> *) . 
+  
+  (forall x .   s x -> t x) -> (m a -> n a) -> MonadView s m a -> MonadView t n a
+[LclIdX,
+Arity=3,
+Str=<L,1*C1(U)><L,C(U)><S,1*U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=3,unsat_ok=False,boring_ok=False)
+Tmpl= \ (@ (s :: * -> *))
+(@ (t :: * -> *))
+(@ (m :: * -> *))
+(@ a)
+(@ (n :: * -> *))
+(ds_d29p [Occ=Once!] :: forall x .   s x -> t x)
+(ds_d29q [Occ=Once] :: m a -> n a)
+(ds_d29r [Occ=Once!] :: MonadView s m a) ->
+case ds_d29r  of  {
+  Return a [Occ=Once] -> Return @ t @ n @ a a;
+    :>>= @ a t [Occ=Once] k [Occ=Once] -> $W:>>= @ t @ n @ a @ a (ds_d29p @ a t) (. @ (m a) @ (n a) @ a ds_d29q k)
+  }}]
+hoistMV
+= \ (@ (s :: * -> *))
+  (@ (t :: * -> *))
+  (@ (m :: * -> *))
+  (@ a)
+  (@ (n :: * -> *))
+  (ds_d29p [Dmd=<L,1*C1(U)>] :: forall x .   s x -> t x)
+  (ds_d29q [Dmd=<L,C(U)>] :: m a -> n a)
+  (ds_d29r [Dmd=<S,1*U>] :: MonadView s m a) ->
+  case ds_d29r  of  {
+    Return a  -> Return @ t @ n @ a a;
+      :>>= @ a t  k [Dmd=<L,C(U)>] -> case ds_d29p @ a t  of dt_X1Gj  { __DEFAULT  -> :>>= @ t @ n @ a @ a dt_X1Gj (. @ (m a) @ (n a) @ a ds_d29q k) }
+    }
+
+
+iterMV [InlPrag=INLINE (sat-args=1) ] :: forall (m :: * -> *) (t :: * -> *) a .  Monad m => (t a -> MonadView m t a) -> t a -> m a
+[LclIdX,
+Arity=3,
+Str=<S,U(A,C(C1(U)),A,C(U),A)><C(S),C(U)><L,U> ,
+Unf=Unf{Src=InlineStable,
+TopLvl=True,
+Value=True,
+ConLike=True,
+WorkFree=True,
+Expandable=True,
+Guidance=ALWAYS_IF(arity=2,unsat_ok=False,boring_ok=False)
+Tmpl= \ (@ (m :: * -> *)) (@ (t :: * -> *)) (@ a) ($dMonad_a1ZI [Occ=OnceL*] :: Monad m) (f [Occ=OnceL!] :: t a -> MonadView m t a) ->
+letrec {
+  
+    go [Occ=LoopBreaker] :: t a -> m a
+    [LclId, Arity=1, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 160 0 }]
+    go
+    = \ (t [Occ=Once] :: t a) ->
+      case f t  of  {
+        Return a [Occ=Once] -> return @ m $dMonad_a1ZI @ a a;
+          :>>= @ a m [Occ=Once] k [Occ=OnceL!] -> >>= @ m $dMonad_a1ZI @ a @ a m (\ (x [Occ=Once] :: a) -> go (k x))
+        }; } in
+  go}]
+iterMV
+= \ (@ (m :: * -> *))
+  (@ (t :: * -> *))
+  (@ a)
+  ($dMonad_a1ZI [Dmd=<S,U(A,C(C1(U)),A,C(U),A)>] :: Monad m)
+  (eta_B1 [Dmd=<C(S),C(U)>] :: t a -> MonadView m t a)
+  (eta_X2  :: t a) ->
+  letrec {
+    
+      go [Occ=LoopBreaker] :: t a -> m a
+      [LclId,
+      Arity=1,
+      Str=<L,U> {B1-><C(S),C(U)> a1ZI-><S,U(A,C(C1(U)),A,C(U),A)>},
+      Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 160 0
+      }]
+      go
+      = \ (t  :: t a) ->
+        case eta_B1 t  of  {
+          Return a  -> return @ m $dMonad_a1ZI @ a a;
+            :>>= @ a m  k [Dmd=<L,C(U)>] -> >>= @ m $dMonad_a1ZI @ a @ a m (\ (x  :: a) -> go (k x))
+          }; } in
+    go eta_X2
+
+
+$trModule_s2ge  :: Addr#
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 120 0 }]
+$trModule_s2ge = "monad-skeleton-0.1.4-DJ78ErZbPM05ZAVKZBGAZT"#
+
+
+$trModule_s2gd  :: TrName
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$trModule_s2gd = TrNameS $trModule_s2ge
+
+
+$trModule_s2gg  :: Addr#
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 70 0 }]
+$trModule_s2gg = "Control.Monad.Skeleton"#
+
+
+$trModule_s2gf  :: TrName
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$trModule_s2gf = TrNameS $trModule_s2gg
+
+
+$trModule  :: Module
+[LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$trModule = Module $trModule_s2gd $trModule_s2gf
+
+
+$krep_a28K [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a28K = KindRepFun krep$*Arr* krep$*Arr*
+
+
+$krep_a28W [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a28W = KindRepFun krep$*Arr* $krep_a28K
+
+
+$krep_a292 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$krep_a292 = KindRepVar 3#
+
+
+$krep_a28R [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$krep_a28R = KindRepVar 2#
+
+
+$krep_a28M [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$krep_a28M = KindRepVar 1#
+
+
+$krep_a28Z [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$krep_a28Z = KindRepVar 1#
+
+
+$krep_a295 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m3 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a295 = KindRepApp $krep_a28Z $krep_a28R
+
+
+$krep_a294 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a294 = KindRepFun $krep_a292 $krep_a295
+
+
+$krep_a28O [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$krep_a28O = KindRepVar 0#
+
+
+$krep_a28Q [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m3 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a28Q = KindRepApp $krep_a28O $krep_a28R
+
+
+$krep_a291 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m3 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a291 = KindRepApp $krep_a28O $krep_a292
+
+
+$tcMonadView_s2gi  :: Addr#
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 40 0 }]
+$tcMonadView_s2gi = "MonadView"#
+
+
+$tcMonadView_s2gh  :: TrName
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$tcMonadView_s2gh = TrNameS $tcMonadView_s2gi
+
+
+$tcMonadView  :: TyCon
+[LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 70 }]
+$tcMonadView = TyCon 10055969704467293872## 5843619847608485972## $trModule $tcMonadView_s2gh 0# $krep_a28W
+
+
+$krep_s2gl  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s2gl = : @ KindRep $krep_a28R ([] @ KindRep)
+
+
+$krep_s2gk  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s2gk = : @ KindRep $krep_a28Z $krep_s2gl
+
+
+$krep_s2gj  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s2gj = : @ KindRep $krep_a28O $krep_s2gk
+
+
+$krep_a28Y [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a28Y = KindRepTyConApp $tcMonadView $krep_s2gj
+
+
+$krep_a28X [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a28X = KindRepFun $krep_a28R $krep_a28Y
+
+
+$tc'Return_s2gn  :: Addr#
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0 }]
+$tc'Return_s2gn = "'Return"#
+
+
+$tc'Return_s2gm  :: TrName
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$tc'Return_s2gm = TrNameS $tc'Return_s2gn
+
+
+$tc'Return  :: TyCon
+[LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 70 }]
+$tc'Return = TyCon 1903189488404957954## 3318334875092900651## $trModule $tc'Return_s2gm 3# $krep_a28X
+
+
+$krep_a293 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a293 = KindRepFun $krep_a294 $krep_a28Y
+
+
+$krep_a290 [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a290 = KindRepFun $krep_a291 $krep_a293
+
+
+$tc':>>=_s2gp  :: Addr#
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0 }]
+$tc':>>=_s2gp = "':>>="#
+
+
+$tc':>>=_s2go  :: TrName
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$tc':>>=_s2go = TrNameS $tc':>>=_s2gp
+
+
+$tc':>>=  :: TyCon
+[LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 70 }]
+$tc':>>= = TyCon 9802189055482652945## 12615530023156867024## $trModule $tc':>>=_s2go 4# $krep_a290
+
+
+$tcSkeleton_s2gr  :: Addr#
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0 }]
+$tcSkeleton_s2gr = "Skeleton"#
+
+
+$tcSkeleton_s2gq  :: TrName
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$tcSkeleton_s2gq = TrNameS $tcSkeleton_s2gr
+
+
+$tcSkeleton  :: TyCon
+[LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 70 }]
+$tcSkeleton = TyCon 15206792858723098549## 3824678201197047913## $trModule $tcSkeleton_s2gq 0# $krep_a28K
+
+
+$krep_s2gs  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s2gs = : @ KindRep $krep_a28O ([] @ KindRep)
+
+
+$krep_a28V [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a28V = KindRepTyConApp $tcSkeleton $krep_s2gs
+
+
+$krep_s2gv  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s2gv = : @ KindRep $krep_a28V ([] @ KindRep)
+
+
+$krep_a28U [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a28U = KindRepTyConApp $tcKleisli $krep_s2gv
+
+
+$krep_s2gz  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s2gz = : @ KindRep $krep_a28M ([] @ KindRep)
+
+
+$krep_s2gy  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s2gy = : @ KindRep $krep_a28R $krep_s2gz
+
+
+$krep_s2gx  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s2gx = : @ KindRep $krep_a28U $krep_s2gy
+
+
+$krep_s2gw  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s2gw = : @ KindRep krep$* $krep_s2gx
+
+
+$krep_a28T [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a28T = KindRepTyConApp $tcCat $krep_s2gw
+
+
+$krep_s2gA  :: [KindRep]
+[LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_s2gA = : @ KindRep $krep_a28O $krep_s2gz
+
+
+$krep_a28N [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a28N = KindRepTyConApp $tcSkeleton $krep_s2gA
+
+
+$krep_a28L [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a28L = KindRepFun $krep_a28M $krep_a28N
+
+
+$tc'ReturnS_s2gD  :: Addr#
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0 }]
+$tc'ReturnS_s2gD = "'ReturnS"#
+
+
+$tc'ReturnS_s2gC  :: TrName
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$tc'ReturnS_s2gC = TrNameS $tc'ReturnS_s2gD
+
+
+$tc'ReturnS  :: TyCon
+[LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 70 }]
+$tc'ReturnS = TyCon 14736328279181530987## 7452885294421838304## $trModule $tc'ReturnS_s2gC 2# $krep_a28L
+
+
+$krep_a28S [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a28S = KindRepFun $krep_a28T $krep_a28N
+
+
+$krep_a28P [InlPrag=[~]  ] :: KindRep
+[LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
+$krep_a28P = KindRepFun $krep_a28Q $krep_a28S
+
+
+$tc'BindS_s2gF  :: Addr#
+[LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0 }]
+$tc'BindS_s2gF = "'BindS"#
+
+
+$tc'BindS_s2gE  :: TrName
+[LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
+$tc'BindS_s2gE = TrNameS $tc'BindS_s2gF
+
+
+$tc'BindS  :: TyCon
+[LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 70 }]
+$tc'BindS = TyCon 10730217199955732501## 7944208501276065293## $trModule $tc'BindS_s2gE 3# $krep_a28P
