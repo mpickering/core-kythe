@@ -1,4 +1,4 @@
-Usage
+# Usage
 
 Enter the environment with the plugin.
 
@@ -18,4 +18,12 @@ ghc -fplugin KythePlugin -fplugin-opt KythePlugin:logs T.hs
 Then access localhost:8080 in order to view the cross linked source.
 
 
+# Examples
 
+There are also some examples which can be rendered if kythe is installed.
+
+```
+./serve examples/ localhost:8080
+```
+
+Will render the output for 5 simple files from two projects.
