@@ -187,8 +187,11 @@ makeModuleTick hmod = ModuleTick
 
 makePkgModule :: Module -> PkgModule
 makePkgModule (Module uid modname)
-  = PkgModule { getPackage = "main" -- T.pack (FS.unpackFS (unitIdFS uid))
+  = traceShowId $ PkgModule { getPackage = T.pack (munge $ FS.unpackFS (unitIdFS uid))
               , getModule =  T.pack (moduleNameString modname)  }
+  where
+    munge "main" = "main_main"
+    munge t = t
 
 makeSourcePath :: FilePath -> SourcePath
 makeSourcePath fp = SourcePath (T.pack fp)
