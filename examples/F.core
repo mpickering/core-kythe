@@ -4,29 +4,29 @@ myId  :: forall p .   p -> p
 Arity=1,
 Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=ALWAYS_IF(arity=1,unsat_ok=True,boring_ok=True)
 }]
-myId = \ (@ p) (x  :: p) -> x
+myId = \ (@ p) (x  :: p) -> src<F.hs:3:1-10> x
 
 
-$trModule_sYz  :: Addr#
+$trModule_sZ1  :: Addr#
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0 }]
-$trModule_sYz = "main"#
+$trModule_sZ1 = "main"#
 
 
-$trModule_sYy  :: TrName
+$trModule_sZ0  :: TrName
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$trModule_sYy = TrNameS $trModule_sYz
+$trModule_sZ0 = TrNameS $trModule_sZ1
 
 
-$trModule_sYB  :: Addr#
+$trModule_sZ3  :: Addr#
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0 }]
-$trModule_sYB = "F"#
+$trModule_sZ3 = "F"#
 
 
-$trModule_sYA  :: TrName
+$trModule_sZ2  :: TrName
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$trModule_sYA = TrNameS $trModule_sYB
+$trModule_sZ2 = TrNameS $trModule_sZ3
 
 
 $trModule  :: Module
 [LclIdX, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$trModule = Module $trModule_sYy $trModule_sYA
+$trModule = Module $trModule_sZ0 $trModule_sZ2

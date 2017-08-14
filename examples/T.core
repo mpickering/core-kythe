@@ -4,7 +4,7 @@ myId  :: forall a .   a -> a
 Arity=1,
 Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=ALWAYS_IF(arity=1,unsat_ok=True,boring_ok=True)
 }]
-myId = \ (@ a) (a  :: a) -> a
+myId = \ (@ a) (a  :: a) -> src<t.hs:7:1-10> a
 
 
 hisId  :: forall a .   a -> a
@@ -17,29 +17,29 @@ WorkFree=True,
 Expandable=True,
 Guidance=ALWAYS_IF(arity=0,unsat_ok=True,boring_ok=True)
 }]
-hisId = myId
+hisId = src<t.hs:10:1-14> myId
 
 
-$trModule_s19x  :: Addr#
+$trModule_s1a3  :: Addr#
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0 }]
-$trModule_s19x = "main"#
+$trModule_s1a3 = "main"#
 
 
-$trModule_s19w  :: TrName
+$trModule_s1a2  :: TrName
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$trModule_s19w = TrNameS $trModule_s19x
+$trModule_s1a2 = TrNameS $trModule_s1a3
 
 
-$trModule_s19z  :: Addr#
+$trModule_s1a5  :: Addr#
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0 }]
-$trModule_s19z = "T"#
+$trModule_s1a5 = "T"#
 
 
-$trModule_s19y  :: TrName
+$trModule_s1a4  :: TrName
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$trModule_s19y = TrNameS $trModule_s19z
+$trModule_s1a4 = TrNameS $trModule_s1a5
 
 
 $trModule  :: Module
 [LclIdX, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$trModule = Module $trModule_s19w $trModule_s19y
+$trModule = Module $trModule_s1a2 $trModule_s1a4
