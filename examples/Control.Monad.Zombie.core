@@ -10,7 +10,7 @@ ConLike=True,
 WorkFree=True,
 Expandable=True,
 Guidance=ALWAYS_IF(arity=1,unsat_ok=True,boring_ok=False)
-Tmpl= \ (@ (t :: * -> *)) (@ a) (a [Occ=Once] :: a) -> ReturnZ @ t @ a a (Sunlight @ t @ a)}]
+}]
 $creturn = \ (@ (t :: * -> *)) (@ a) (a  :: a) -> ReturnZ @ t @ a a (Sunlight @ t @ a)
 
 Rec {
@@ -22,8 +22,8 @@ Str=<S,1*U><L,1*U> ,
 Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [80 0] 110 70
 }]
 $c<|>
-= \ (@ (t :: * -> *)) (@ a) (ds_d3pJ [Dmd=<S,1*U>] :: Zombie t a) (ys [Dmd=<L,1*U>] :: Zombie t a) ->
-  case ds_d3pJ  of  {
+= \ (@ (t :: * -> *)) (@ a) (ds_d3qT [Dmd=<S,1*U>] :: Zombie t a) (ys [Dmd=<L,1*U>] :: Zombie t a) ->
+  case ds_d3qT  of  {
     Sunlight  -> ys;
       ReturnZ x  xs [Dmd=<L,1*U>] -> ReturnZ @ t @ a x ($c<|> @ t @ a xs ys);
       BindZ @ x x  c  xs [Dmd=<L,1*U>] -> BindZ @ t @ a @ x x c ($c<|> @ t @ a xs ys)
@@ -40,10 +40,10 @@ Str=<S,1*U><L,U> ,
 Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [110 60] 180 50
 }]
 $c>>=
-= \ (@ (t :: * -> *)) (@ a) (@ b) (ds_d3pv [Dmd=<S,1*U>] :: Zombie t a) (ds_d3pw  :: a -> Zombie t b) ->
-  case ds_d3pv  of  {
+= \ (@ (t :: * -> *)) (@ a) (@ b) (ds_d3qF [Dmd=<S,1*U>] :: Zombie t a) (ds_d3qG  :: a -> Zombie t b) ->
+  case ds_d3qF  of  {
     Sunlight  -> Sunlight @ t @ b;
-      ReturnZ a  xs [Dmd=<L,1*U>] -> $c<|> @ t @ b (ds_d3pw a) ($c>>= @ t @ a @ b xs ds_d3pw);
+      ReturnZ a  xs [Dmd=<L,1*U>] -> $c<|> @ t @ b (ds_d3qG a) ($c>>= @ t @ a @ b xs ds_d3qG);
       BindZ @ x x  c  xs [Dmd=<L,1*U>] ->
       BindZ
         @ t
@@ -57,8 +57,8 @@ $c>>=
             @ a
             @ b
             c
-            (ds_d3pw `cast` (Sym (N:Kleisli[0] <Zombie t>_R <a>_R <b>_N) :: Coercible (a -> Zombie t b) (Kleisli (Zombie t) a b))))
-          ($c>>= @ t @ a @ b xs ds_d3pw)
+            (ds_d3qG `cast` (Sym (N:Kleisli[0] <Zombie t>_R <a>_R <b>_N) :: Coercible (a -> Zombie t b) (Kleisli (Zombie t) a b))))
+          ($c>>= @ t @ a @ b xs ds_d3qG)
     }
 
 end Rec }
@@ -75,8 +75,7 @@ ConLike=True,
 WorkFree=True,
 Expandable=True,
 Guidance=ALWAYS_IF(arity=2,unsat_ok=True,boring_ok=False)
-Tmpl= \ (@ (t :: * -> *)) (@ a) (@ b) (f [Occ=OnceL!] :: a -> b) (m1 [Occ=Once] :: Zombie t a) ->
-$c>>= @ t @ a @ b m1 (\ (x1 [Occ=Once] :: a) -> ReturnZ @ t @ b (f x1) (Sunlight @ t @ b))}]
+}]
 $cfmap
 = \ (@ (t :: * -> *)) (@ a) (@ b) (f [Dmd=<L,C(U)>] :: a -> b) (m1 [Dmd=<S,1*U>] :: Zombie t a) ->
   $c>>= @ t @ a @ b m1 (\ (x1  :: a) -> ReturnZ @ t @ b (f x1) (Sunlight @ t @ b))
@@ -104,14 +103,13 @@ ConLike=True,
 WorkFree=True,
 Expandable=True,
 Guidance=ALWAYS_IF(arity=2,unsat_ok=True,boring_ok=False)
-Tmpl= \ (@ (t :: * -> *)) (@ a) (@ b) (@ c) (f1 [Occ=Once] :: a -> b -> c) (x [Occ=Once] :: Zombie t a) ->
-$c<*> @ t @ b @ c ($cfmap @ t @ a @ (b -> c) f1 x)}]
+}]
 $cliftA2
 = \ (@ (t :: * -> *)) (@ a) (@ b) (@ c) (f1 [Dmd=<L,C(U)>] :: a -> b -> c) (x [Dmd=<L,1*U>] :: Zombie t a) ->
   $c<*> @ t @ b @ c ($cfmap @ t @ a @ (b -> c) f1 x)
 
 
-lvl_s3ru  :: forall a b (t :: * -> *) .   a -> Zombie t (b -> a)
+lvl_s3sE  :: forall a b (t :: * -> *) .   a -> Zombie t (b -> a)
 [LclId,
 Arity=1,
 Str=<L,U>m2 ,
@@ -122,8 +120,8 @@ ConLike=True,
 WorkFree=True,
 Expandable=True,
 Guidance=ALWAYS_IF(arity=1,unsat_ok=True,boring_ok=False)
-Tmpl= \ (@ a) (@ b) (@ (t :: * -> *)) (x1 [Occ=OnceL] :: a) -> ReturnZ @ t @ (b -> a) (\ _ [Occ=Dead] -> x1) (Sunlight @ t @ (b -> a))}]
-lvl_s3ru = \ (@ a) (@ b) (@ (t :: * -> *)) (x1  :: a) -> ReturnZ @ t @ (b -> a) (\ _ [Occ=Dead, Dmd=<L,A>] -> x1) (Sunlight @ t @ (b -> a))
+}]
+lvl_s3sE = \ (@ a) (@ b) (@ (t :: * -> *)) (x1  :: a) -> ReturnZ @ t @ (b -> a) (\ _ [Occ=Dead, Dmd=<L,A>] -> x1) (Sunlight @ t @ (b -> a))
 
 
 $c<*  :: forall (t :: * -> *) a b .   Zombie t a -> Zombie t b -> Zombie t a
@@ -137,16 +135,16 @@ ConLike=True,
 WorkFree=True,
 Expandable=True,
 Guidance=ALWAYS_IF(arity=1,unsat_ok=True,boring_ok=False)
-Tmpl= \ (@ (t :: * -> *)) (@ a) (@ b) (x [Occ=Once] :: Zombie t a) -> $c<*> @ t @ b @ a ($c>>= @ t @ a @ (b -> a) x (lvl_s3ru @ a @ b @ t))}]
-$c<* = \ (@ (t :: * -> *)) (@ a) (@ b) (x [Dmd=<L,1*U>] :: Zombie t a) -> $c<*> @ t @ b @ a ($c>>= @ t @ a @ (b -> a) x (lvl_s3ru @ a @ b @ t))
+}]
+$c<* = \ (@ (t :: * -> *)) (@ a) (@ b) (x [Dmd=<L,1*U>] :: Zombie t a) -> $c<*> @ t @ b @ a ($c>>= @ t @ a @ (b -> a) x (lvl_s3sE @ a @ b @ t))
 
 
-lvl_s3rv  :: forall a (t :: * -> *) .   Zombie t [a]
+lvl_s3sF  :: forall a (t :: * -> *) .   Zombie t [a]
 [LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-lvl_s3rv = \ (@ a) (@ (t :: * -> *)) -> ReturnZ @ t @ [a] ([] @ a) (Sunlight @ t @ [a])
+lvl_s3sF = \ (@ a) (@ (t :: * -> *)) -> ReturnZ @ t @ [a] ([] @ a) (Sunlight @ t @ [a])
 
 
-lvl_s3rw  :: forall a (t :: * -> *) .   a -> Zombie t ([a] -> [a])
+lvl_s3sG  :: forall a (t :: * -> *) .   a -> Zombie t ([a] -> [a])
 [LclId,
 Arity=1,
 Str=<L,U>m2 ,
@@ -157,8 +155,8 @@ ConLike=True,
 WorkFree=True,
 Expandable=True,
 Guidance=ALWAYS_IF(arity=1,unsat_ok=True,boring_ok=False)
-Tmpl= \ (@ a) (@ (t :: * -> *)) (x1 [Occ=Once] :: a) -> ReturnZ @ t @ ([a] -> [a]) (: @ a x1) (Sunlight @ t @ ([a] -> [a]))}]
-lvl_s3rw = \ (@ a) (@ (t :: * -> *)) (x1  :: a) -> ReturnZ @ t @ ([a] -> [a]) (: @ a x1) (Sunlight @ t @ ([a] -> [a]))
+}]
+lvl_s3sG = \ (@ a) (@ (t :: * -> *)) (x1  :: a) -> ReturnZ @ t @ ([a] -> [a]) (: @ a x1) (Sunlight @ t @ ([a] -> [a]))
 
 
 $csome  :: forall (t :: * -> *) a .   Zombie t a -> Zombie t [a]
@@ -173,7 +171,7 @@ $csome
     
       some_v [Occ=LoopBreaker] :: Zombie t [a]
       [LclId,
-      Str= {a3q7-><S,A>},
+      Str= {a3rh-><S,A>},
       Unf=Unf{Src=<vanilla>, TopLvl=False, Value=False, ConLike=False, WorkFree=False, Expandable=False, Guidance=IF_ARGS [] 180 0
       }]
       some_v
@@ -181,12 +179,12 @@ $csome
         
           m2  :: Zombie t [a]
           [LclId, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=False, ConLike=False, WorkFree=False, Expandable=False, Guidance=IF_ARGS [] 30 0 }]
-          m2 = $c<|> @ t @ [a] some_v (lvl_s3rv @ a @ t) } in
+          m2 = $c<|> @ t @ [a] some_v (lvl_s3sF @ a @ t) } in
         $c>>=
         @ t
           @ ([a] -> [a])
           @ [a]
-          ($c>>= @ t @ a @ ([a] -> [a]) v (lvl_s3rw @ a @ t))
+          ($c>>= @ t @ a @ ([a] -> [a]) v (lvl_s3sG @ a @ t))
           (\ (x1 [Dmd=<L,C(U)>] :: [a] -> [a]) -> $c>>= @ t @ [a] @ [a] m2 (\ (x2  :: [a]) -> ReturnZ @ t @ [a] (x1 x2) (Sunlight @ t @ [a]))); } in
     some_v
 
@@ -203,10 +201,10 @@ $cmany
     
       many_v [Occ=LoopBreaker] :: Zombie t [a]
       [LclId,
-      Str= {a3q1-><S,A>},
+      Str= {a3rb-><S,A>},
       Unf=Unf{Src=<vanilla>, TopLvl=False, Value=False, ConLike=False, WorkFree=False, Expandable=False, Guidance=IF_ARGS [] 90 0
       }]
-      many_v = $c<|> @ t @ [a] ($c<*> @ t @ [a] @ [a] ($c>>= @ t @ a @ ([a] -> [a]) v (lvl_s3rw @ a @ t)) many_v) (lvl_s3rv @ a @ t); } in
+      many_v = $c<|> @ t @ [a] ($c<*> @ t @ [a] @ [a] ($c>>= @ t @ a @ ([a] -> [a]) v (lvl_s3sG @ a @ t)) many_v) (lvl_s3sF @ a @ t); } in
     many_v
 
 
@@ -221,7 +219,7 @@ ConLike=True,
 WorkFree=True,
 Expandable=True,
 Guidance=ALWAYS_IF(arity=2,unsat_ok=False,boring_ok=False)
-Tmpl= \ (@ (t :: * -> *)) (@ a) (@ b) (m1 [Occ=Once] :: Zombie t a) (k [Occ=OnceL] :: Zombie t b) -> $c>>= @ t @ a @ b m1 (\ _ [Occ=Dead] -> k)}]
+}]
 $c>>
 = \ (@ (t :: * -> *)) (@ a) (@ b) (eta_B2 [Dmd=<S,1*U>] :: Zombie t a) (eta_B1  :: Zombie t b) ->
   $c>>= @ t @ a @ b eta_B2 (\ _ [Occ=Dead, Dmd=<L,A>] -> eta_B1)
@@ -238,21 +236,15 @@ ConLike=True,
 WorkFree=True,
 Expandable=True,
 Guidance=ALWAYS_IF(arity=2,unsat_ok=True,boring_ok=False)
-Tmpl= \ (@ (t :: * -> *)) (@ a) (@ b) (x [Occ=OnceL] :: a) (m1 [Occ=Once] :: Zombie t b) ->
-let {
-  
-    lvl_s3rz [Occ=OnceL] :: Zombie t a
-    [LclId, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-    lvl_s3rz = ReturnZ @ t @ a x (Sunlight @ t @ a) } in
-  $c>>= @ t @ b @ a m1 (\ _ [Occ=Dead] -> lvl_s3rz)}]
+}]
 $c<$
 = \ (@ (t :: * -> *)) (@ a) (@ b) (x  :: a) (m1 [Dmd=<S,1*U>] :: Zombie t b) ->
   let {
     
-      lvl_s3rz  :: Zombie t a
+      lvl_s3sJ  :: Zombie t a
       [LclId, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-      lvl_s3rz = ReturnZ @ t @ a x (Sunlight @ t @ a) } in
-    $c>>= @ t @ b @ a m1 (\ _ [Occ=Dead, Dmd=<L,A>] -> lvl_s3rz)
+      lvl_s3sJ = ReturnZ @ t @ a x (Sunlight @ t @ a) } in
+    $c>>= @ t @ b @ a m1 (\ _ [Occ=Dead, Dmd=<L,A>] -> lvl_s3sJ)
 
 
 $fFunctorZombie [InlPrag=  CONLIKE] :: forall (t :: * -> *) .   Functor (Zombie t)
@@ -275,7 +267,7 @@ Unf=DFun: \ (@ (t :: * -> *)) -> C:Alternative TYPE: Zombie t $fApplicativeZombi
 $fAlternativeZombie = \ (@ (t :: * -> *)) -> C:Alternative @ (Zombie t) ($fApplicativeZombie @ t) (Sunlight @ t) ($c<|> @ t) ($csome @ t) ($cmany @ t)
 
 
-lvl_s3rA  :: forall (t :: * -> *) a .   [Char] -> Zombie t a
+lvl_s3sK  :: forall (t :: * -> *) a .   [Char] -> Zombie t a
 [LclId,
 Arity=1,
 Str=<B,U>x ,
@@ -286,8 +278,8 @@ ConLike=True,
 WorkFree=True,
 Expandable=True,
 Guidance=ALWAYS_IF(arity=1,unsat_ok=True,boring_ok=True)
-Tmpl= \ (@ (t :: * -> *)) (@ a) (eta_B1 [Occ=Once] :: [Char]) -> errorWithoutStackTrace @ 'LiftedRep @ (Zombie t a) eta_B1}]
-lvl_s3rA = \ (@ (t :: * -> *)) (@ a) (eta_B1 [Dmd=<B,U>] :: [Char]) -> errorWithoutStackTrace @ 'LiftedRep @ (Zombie t a) eta_B1
+}]
+lvl_s3sK = \ (@ (t :: * -> *)) (@ a) (eta_B1 [Dmd=<B,U>] :: [Char]) -> errorWithoutStackTrace @ 'LiftedRep @ (Zombie t a) eta_B1
 
 
 $fMonadZombie [InlPrag=  CONLIKE] :: forall (t :: * -> *) .   Monad (Zombie t)
@@ -295,7 +287,7 @@ $fMonadZombie [InlPrag=  CONLIKE] :: forall (t :: * -> *) .   Monad (Zombie t)
 Str=m ,
 Unf=DFun: \ (@ (t :: * -> *)) ->
 C:Monad TYPE: Zombie t $fApplicativeZombie @ t $c>>= @ t $c>> @ t $creturn @ t \ (@ a) -> errorWithoutStackTrace @ 'LiftedRep @ (Zombie t a)]
-$fMonadZombie = \ (@ (t :: * -> *)) -> C:Monad @ (Zombie t) ($fApplicativeZombie @ t) ($c>>= @ t) ($c>> @ t) ($creturn @ t) (lvl_s3rA @ t)
+$fMonadZombie = \ (@ (t :: * -> *)) -> C:Monad @ (Zombie t) ($fApplicativeZombie @ t) ($c>>= @ t) ($c>> @ t) ($creturn @ t) (lvl_s3sK @ t)
 
 
 $fMonadPlusZombie [InlPrag=  CONLIKE] :: forall (t :: * -> *) .   MonadPlus (Zombie t)
@@ -314,26 +306,10 @@ ConLike=True,
 WorkFree=True,
 Expandable=True,
 Guidance=ALWAYS_IF(arity=1,unsat_ok=False,boring_ok=False)
-Tmpl= \ (@ (t :: * -> *)) (@ a) (ds_d3pk [Occ=Once!] :: MonadView t (Zombie t) a) ->
-case ds_d3pk  of  {
-  Return x [Occ=Once] -> ReturnZ @ t @ a x (Sunlight @ t @ a);
-    :>>= @ a x [Occ=Once] k [Occ=Once] ->
-    BindZ
-      @ t
-        @ a
-        @ a
-        x
-        (Leaf
-        @ *
-          @ (Kleisli (Zombie t))
-          @ a
-          @ a
-          (k `cast` (Sym (N:Kleisli[0] <Zombie t>_R <a>_R <a>_N) :: Coercible (a -> Zombie t a1) (Kleisli (Zombie t) a a1))))
-        (Sunlight @ t @ a)
-  }}]
+}]
 embalm
-= \ (@ (t :: * -> *)) (@ a) (ds_d3pk [Dmd=<S,1*U>] :: MonadView t (Zombie t) a) ->
-  case ds_d3pk  of  {
+= \ (@ (t :: * -> *)) (@ a) (ds_d3qu [Dmd=<S,1*U>] :: MonadView t (Zombie t) a) ->
+  case ds_d3qu  of  {
     Return x  -> ReturnZ @ t @ a x (Sunlight @ t @ a);
       :>>= @ a x  k  ->
       BindZ
@@ -351,9 +327,9 @@ embalm
     }
 
 
-lvl_s3tz  :: forall (t :: * -> *) a .   Cat (Kleisli (Zombie t)) a a
+lvl_s3uJ  :: forall (t :: * -> *) a .   Cat (Kleisli (Zombie t)) a a
 [LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-lvl_s3tz
+lvl_s3uJ
 = \ (@ (t :: * -> *)) (@ a) ->
   Leaf
     @ *
@@ -374,26 +350,10 @@ ConLike=True,
 WorkFree=True,
 Expandable=True,
 Guidance=ALWAYS_IF(arity=1,unsat_ok=False,boring_ok=False)
-Tmpl= \ (@ (t :: * -> *)) (@ a) (t [Occ=Once] :: t a) ->
-case $W:>>= @ t @ (Zombie t) @ a @ a t ($creturn @ t @ a)  of  {
-  Return x [Occ=Once] -> ReturnZ @ t @ a x (Sunlight @ t @ a);
-    :>>= @ a x [Occ=Once] k [Occ=Once] ->
-    BindZ
-      @ t
-        @ a
-        @ a
-        x
-        (Leaf
-        @ *
-          @ (Kleisli (Zombie t))
-          @ a
-          @ a
-          (k `cast` (Sym (N:Kleisli[0] <Zombie t>_R <a>_R <a>_N) :: Coercible (a -> Zombie t a1) (Kleisli (Zombie t) a a1))))
-        (Sunlight @ t @ a)
-  }}]
+}]
 liftZ
 = \ (@ (t :: * -> *)) (@ a) (eta_B1 [Dmd=<S,1*U>] :: t a) ->
-  case eta_B1  of dt_X1Gj  { __DEFAULT  -> BindZ @ t @ a @ a dt_X1Gj (lvl_s3tz @ t @ a) (Sunlight @ t @ a) }
+  case eta_B1  of dt_X1Hh  { __DEFAULT  -> BindZ @ t @ a @ a dt_X1Hh (lvl_s3uJ @ t @ a) (Sunlight @ t @ a) }
 
 Rec {
 
@@ -451,14 +411,14 @@ Str=<S,1*U> ,
 Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [80] 140 70
 }]
 disembalm
-= \ (@ (t :: * -> *)) (@ a) (ds_d3pa [Dmd=<S,1*U>] :: Zombie t a) ->
-  case ds_d3pa  of  {
+= \ (@ (t :: * -> *)) (@ a) (ds_d3qk [Dmd=<S,1*U>] :: Zombie t a) ->
+  case ds_d3qk  of  {
     Sunlight  -> [] @ (MonadView t (Zombie t) a);
       ReturnZ x  xs [Dmd=<L,1*U>] -> : @ (MonadView t (Zombie t) a) (Return @ t @ (Zombie t) @ a x) (disembalm @ t @ a xs);
       BindZ @ x x [Dmd=<L,1*U>] d  xs [Dmd=<L,1*U>] ->
       :
         @ (MonadView t (Zombie t) a)
-          (case x  of dt_X1Gj  { __DEFAULT  -> :>>= @ t @ (Zombie t) @ a @ x dt_X1Gj (disembalm_go @ t @ x @ a d) })
+          (case x  of dt_X1Hh  { __DEFAULT  -> :>>= @ t @ (Zombie t) @ a @ x dt_X1Hh (disembalm_go @ t @ x @ a d) })
           (disembalm @ t @ a xs)
     }
 
@@ -476,46 +436,14 @@ ConLike=True,
 WorkFree=True,
 Expandable=True,
 Guidance=ALWAYS_IF(arity=1,unsat_ok=False,boring_ok=False)
-Tmpl= \ (@ (s :: * -> *)) (@ (t :: * -> *)) (@ a) (f [Occ=OnceL!] :: forall x .   s x -> t x) ->
-letrec {
-  
-    go [Occ=LoopBreaker] :: forall x .   Zombie s x -> Zombie t x
-    [LclId, Arity=1, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [70] 160 80 }]
-    go
-    = \ (@ x) (ds_d3oG [Occ=Once!] :: Zombie s x) ->
-      case ds_d3oG  of  {
-        Sunlight  -> Sunlight @ t @ x;
-          ReturnZ x [Occ=Once] xs [Occ=Once] -> ReturnZ @ t @ x x (go @ x xs);
-          BindZ @ x x [Occ=Once] c [Occ=Once] xs [Occ=Once] ->
-          BindZ
-            @ t
-              @ x
-              @ x
-              (f @ x x)
-              (transCat
-              @ *
-                @ (Kleisli (Zombie s))
-                @ (Kleisli (Zombie t))
-                @ x
-                @ x
-                ((\ (@ x) (@ y) -> . @ (Zombie s y) @ (Zombie t y) @ Any (go @ y))
-                `cast` (forall (x :: <*>_N).
-                forall (y :: <*>_N).
-                UnsafeCo representational (Any -> Zombie s y) (Kleisli (Zombie s) x y)
-                -> UnsafeCo representational (Any -> Zombie t y) (Kleisli (Zombie t) x y)
-                :: Coercible
-                (forall x y .   (Any -> Zombie s y) -> Any -> Zombie t y) (forall x y .   Kleisli (Zombie s) x y -> Kleisli (Zombie t) x y)))
-                c)
-              (go @ x xs)
-        }; } in
-  go @ a}]
+}]
 hoistZombie
 = \ (@ (s :: * -> *)) (@ (t :: * -> *)) (@ a) (f [Dmd=<L,C(U)>] :: forall x .   s x -> t x) (eta_B1 [Dmd=<S,1*U>] :: Zombie s a) ->
   letrec {
     
-      lvl_s3rB  :: forall x y .   (Any -> Zombie s y) -> Any -> Zombie t y
+      lvl_s3sL  :: forall x y .   (Any -> Zombie s y) -> Any -> Zombie t y
       [LclId, Arity=2, Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 60 }]
-      lvl_s3rB = \ (@ x) (@ y) -> . @ (Zombie s y) @ (Zombie t y) @ Any (go @ y);
+      lvl_s3sL = \ (@ x) (@ y) -> . @ (Zombie s y) @ (Zombie t y) @ Any (go @ y);
       
       go [Occ=LoopBreaker] :: forall x .   Zombie s x -> Zombie t x
       [LclId,
@@ -524,8 +452,8 @@ hoistZombie
       Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [70] 140 80
       }]
       go
-      = \ (@ x) (ds_d3oG [Dmd=<S,1*U>] :: Zombie s x) ->
-        case ds_d3oG  of  {
+      = \ (@ x) (ds_d3pQ [Dmd=<S,1*U>] :: Zombie s x) ->
+        case ds_d3pQ  of  {
           Sunlight  -> Sunlight @ t @ x;
             ReturnZ x  xs [Dmd=<L,1*U>] -> ReturnZ @ t @ x x (go @ x xs);
             BindZ @ x x  c [Dmd=<L,1*U>] xs [Dmd=<L,1*U>] ->
@@ -540,7 +468,7 @@ hoistZombie
                   @ (Kleisli (Zombie t))
                   @ x
                   @ x
-                  (lvl_s3rB
+                  (lvl_s3sL
                   `cast` (forall (x :: <*>_N).
                   forall (y :: <*>_N).
                   UnsafeCo representational (Any -> Zombie s y) (Kleisli (Zombie s) x y)
@@ -553,186 +481,186 @@ hoistZombie
     go @ a eta_B1
 
 
-$trModule_s3qz  :: Addr#
+$trModule_s3rJ  :: Addr#
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 120 0 }]
-$trModule_s3qz = "monad-skeleton-0.1.4-DJ78ErZbPM05ZAVKZBGAZT"#
+$trModule_s3rJ = "monad-skeleton-0.1.4-8qPR3YvpoiQ3KQsCUlMma8"#
 
 
-$trModule_s3qy  :: TrName
+$trModule_s3rI  :: TrName
 [LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$trModule_s3qy = TrNameS $trModule_s3qz
+$trModule_s3rI = TrNameS $trModule_s3rJ
 
 
-$trModule_s3qB  :: Addr#
+$trModule_s3rL  :: Addr#
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 60 0 }]
-$trModule_s3qB = "Control.Monad.Zombie"#
+$trModule_s3rL = "Control.Monad.Zombie"#
 
 
-$trModule_s3qA  :: TrName
+$trModule_s3rK  :: TrName
 [LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$trModule_s3qA = TrNameS $trModule_s3qB
+$trModule_s3rK = TrNameS $trModule_s3rL
 
 
 $trModule  :: Module
 [LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$trModule = Module $trModule_s3qy $trModule_s3qA
+$trModule = Module $trModule_s3rI $trModule_s3rK
 
 
-$krep_a3oq [InlPrag=[~]  ] :: KindRep
+$krep_a3pA [InlPrag=[~]  ] :: KindRep
 [LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_a3oq = KindRepFun krep$*Arr* krep$*Arr*
+$krep_a3pA = KindRepFun krep$*Arr* krep$*Arr*
 
 
-$krep_a3oy [InlPrag=[~]  ] :: KindRep
+$krep_a3pI [InlPrag=[~]  ] :: KindRep
 [LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$krep_a3oy = KindRepVar 2#
+$krep_a3pI = KindRepVar 2#
 
 
-$krep_a3ot [InlPrag=[~]  ] :: KindRep
+$krep_a3pD [InlPrag=[~]  ] :: KindRep
 [LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$krep_a3ot = KindRepVar 1#
+$krep_a3pD = KindRepVar 1#
 
 
-$krep_a3os [InlPrag=[~]  ] :: KindRep
+$krep_a3pC [InlPrag=[~]  ] :: KindRep
 [LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$krep_a3os = KindRepVar 0#
+$krep_a3pC = KindRepVar 0#
 
 
-$krep_a3ox [InlPrag=[~]  ] :: KindRep
+$krep_a3pH [InlPrag=[~]  ] :: KindRep
 [LclId, Str=m3 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_a3ox = KindRepApp $krep_a3os $krep_a3oy
+$krep_a3pH = KindRepApp $krep_a3pC $krep_a3pI
 
 
-$tcZombie_s3qD  :: Addr#
+$tcZombie_s3rN  :: Addr#
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0 }]
-$tcZombie_s3qD = "Zombie"#
+$tcZombie_s3rN = "Zombie"#
 
 
-$tcZombie_s3qC  :: TrName
+$tcZombie_s3rM  :: TrName
 [LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$tcZombie_s3qC = TrNameS $tcZombie_s3qD
+$tcZombie_s3rM = TrNameS $tcZombie_s3rN
 
 
 $tcZombie  :: TyCon
 [LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 70 }]
-$tcZombie = TyCon 9479255154625466426## 14733736425252129565## $trModule $tcZombie_s3qC 0# $krep_a3oq
+$tcZombie = TyCon 11293397174047330303## 7657928837894900771## $trModule $tcZombie_s3rM 0# $krep_a3pA
 
 
-$krep_s3qE  :: [KindRep]
+$krep_s3rO  :: [KindRep]
 [LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_s3qE = : @ KindRep $krep_a3os ([] @ KindRep)
+$krep_s3rO = : @ KindRep $krep_a3pC ([] @ KindRep)
 
 
-$krep_a3oC [InlPrag=[~]  ] :: KindRep
+$krep_a3pM [InlPrag=[~]  ] :: KindRep
 [LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_a3oC = KindRepTyConApp $tcZombie $krep_s3qE
+$krep_a3pM = KindRepTyConApp $tcZombie $krep_s3rO
 
 
-$krep_s3qF  :: [KindRep]
+$krep_s3rP  :: [KindRep]
 [LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_s3qF = : @ KindRep $krep_a3oC ([] @ KindRep)
+$krep_s3rP = : @ KindRep $krep_a3pM ([] @ KindRep)
 
 
-$krep_a3oB [InlPrag=[~]  ] :: KindRep
+$krep_a3pL [InlPrag=[~]  ] :: KindRep
 [LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_a3oB = KindRepTyConApp $tcKleisli $krep_s3qF
+$krep_a3pL = KindRepTyConApp $tcKleisli $krep_s3rP
 
 
-$krep_s3qJ  :: [KindRep]
+$krep_s3rT  :: [KindRep]
 [LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_s3qJ = : @ KindRep $krep_a3ot ([] @ KindRep)
+$krep_s3rT = : @ KindRep $krep_a3pD ([] @ KindRep)
 
 
-$krep_s3qI  :: [KindRep]
+$krep_s3rS  :: [KindRep]
 [LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_s3qI = : @ KindRep $krep_a3oy $krep_s3qJ
+$krep_s3rS = : @ KindRep $krep_a3pI $krep_s3rT
 
 
-$krep_s3qH  :: [KindRep]
+$krep_s3rR  :: [KindRep]
 [LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_s3qH = : @ KindRep $krep_a3oB $krep_s3qI
+$krep_s3rR = : @ KindRep $krep_a3pL $krep_s3rS
 
 
-$krep_s3qG  :: [KindRep]
+$krep_s3rQ  :: [KindRep]
 [LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_s3qG = : @ KindRep krep$* $krep_s3qH
+$krep_s3rQ = : @ KindRep krep$* $krep_s3rR
 
 
-$krep_a3oA [InlPrag=[~]  ] :: KindRep
+$krep_a3pK [InlPrag=[~]  ] :: KindRep
 [LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_a3oA = KindRepTyConApp $tcCat $krep_s3qG
+$krep_a3pK = KindRepTyConApp $tcCat $krep_s3rQ
 
 
-$krep_s3qK  :: [KindRep]
+$krep_s3rU  :: [KindRep]
 [LclId, Str=m2 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_s3qK = : @ KindRep $krep_a3os $krep_s3qJ
+$krep_s3rU = : @ KindRep $krep_a3pC $krep_s3rT
 
 
-$krep_a3or [InlPrag=[~]  ] :: KindRep
+$krep_a3pB [InlPrag=[~]  ] :: KindRep
 [LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_a3or = KindRepTyConApp $tcZombie $krep_s3qK
+$krep_a3pB = KindRepTyConApp $tcZombie $krep_s3rU
 
 
-$tc'Sunlight_s3qN  :: Addr#
+$tc'Sunlight_s3rX  :: Addr#
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 40 0 }]
-$tc'Sunlight_s3qN = "'Sunlight"#
+$tc'Sunlight_s3rX = "'Sunlight"#
 
 
-$tc'Sunlight_s3qM  :: TrName
+$tc'Sunlight_s3rW  :: TrName
 [LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$tc'Sunlight_s3qM = TrNameS $tc'Sunlight_s3qN
+$tc'Sunlight_s3rW = TrNameS $tc'Sunlight_s3rX
 
 
 $tc'Sunlight  :: TyCon
 [LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 70 }]
-$tc'Sunlight = TyCon 11277180223715360453## 14370681130896609071## $trModule $tc'Sunlight_s3qM 2# $krep_a3or
+$tc'Sunlight = TyCon 1787438877469491663## 3391905816568105408## $trModule $tc'Sunlight_s3rW 2# $krep_a3pB
 
 
-$krep_a3ov [InlPrag=[~]  ] :: KindRep
+$krep_a3pF [InlPrag=[~]  ] :: KindRep
 [LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_a3ov = KindRepFun $krep_a3or $krep_a3or
+$krep_a3pF = KindRepFun $krep_a3pB $krep_a3pB
 
 
-$krep_a3ou [InlPrag=[~]  ] :: KindRep
+$krep_a3pE [InlPrag=[~]  ] :: KindRep
 [LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_a3ou = KindRepFun $krep_a3ot $krep_a3ov
+$krep_a3pE = KindRepFun $krep_a3pD $krep_a3pF
 
 
-$tc'ReturnZ_s3qP  :: Addr#
+$tc'ReturnZ_s3rZ  :: Addr#
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0 }]
-$tc'ReturnZ_s3qP = "'ReturnZ"#
+$tc'ReturnZ_s3rZ = "'ReturnZ"#
 
 
-$tc'ReturnZ_s3qO  :: TrName
+$tc'ReturnZ_s3rY  :: TrName
 [LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$tc'ReturnZ_s3qO = TrNameS $tc'ReturnZ_s3qP
+$tc'ReturnZ_s3rY = TrNameS $tc'ReturnZ_s3rZ
 
 
 $tc'ReturnZ  :: TyCon
 [LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 70 }]
-$tc'ReturnZ = TyCon 4378985040060611791## 90400801769797945## $trModule $tc'ReturnZ_s3qO 2# $krep_a3ou
+$tc'ReturnZ = TyCon 4270294382015102140## 4415216082822077174## $trModule $tc'ReturnZ_s3rY 2# $krep_a3pE
 
 
-$krep_a3oz [InlPrag=[~]  ] :: KindRep
+$krep_a3pJ [InlPrag=[~]  ] :: KindRep
 [LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_a3oz = KindRepFun $krep_a3oA $krep_a3ov
+$krep_a3pJ = KindRepFun $krep_a3pK $krep_a3pF
 
 
-$krep_a3ow [InlPrag=[~]  ] :: KindRep
+$krep_a3pG [InlPrag=[~]  ] :: KindRep
 [LclId, Str=m4 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$krep_a3ow = KindRepFun $krep_a3ox $krep_a3oz
+$krep_a3pG = KindRepFun $krep_a3pH $krep_a3pJ
 
 
-$tc'BindZ_s3qR  :: Addr#
+$tc'BindZ_s3s1  :: Addr#
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0 }]
-$tc'BindZ_s3qR = "'BindZ"#
+$tc'BindZ_s3s1 = "'BindZ"#
 
 
-$tc'BindZ_s3qQ  :: TrName
+$tc'BindZ_s3s0  :: TrName
 [LclId, Str=m1 , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$tc'BindZ_s3qQ = TrNameS $tc'BindZ_s3qR
+$tc'BindZ_s3s0 = TrNameS $tc'BindZ_s3s1
 
 
 $tc'BindZ  :: TyCon
 [LclIdX, Str=m , Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 70 }]
-$tc'BindZ = TyCon 4784284813210810762## 16134589903027902115## $trModule $tc'BindZ_s3qQ 3# $krep_a3ow
+$tc'BindZ = TyCon 16159064753672472697## 18067874246339838433## $trModule $tc'BindZ_s3s0 3# $krep_a3pG

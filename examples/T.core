@@ -20,26 +20,26 @@ Guidance=ALWAYS_IF(arity=0,unsat_ok=True,boring_ok=True)
 hisId = myId
 
 
-$trModule_s17T  :: Addr#
+$trModule_s19x  :: Addr#
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0 }]
-$trModule_s17T = "main"#
+$trModule_s19x = "main"#
 
 
-$trModule_s17S  :: TrName
+$trModule_s19w  :: TrName
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$trModule_s17S = TrNameS $trModule_s17T
+$trModule_s19w = TrNameS $trModule_s19x
 
 
-$trModule_s17V  :: Addr#
+$trModule_s19z  :: Addr#
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0 }]
-$trModule_s17V = "T"#
+$trModule_s19z = "T"#
 
 
-$trModule_s17U  :: TrName
+$trModule_s19y  :: TrName
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$trModule_s17U = TrNameS $trModule_s17V
+$trModule_s19y = TrNameS $trModule_s19z
 
 
 $trModule  :: Module
 [LclIdX, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$trModule = Module $trModule_s17S $trModule_s17U
+$trModule = Module $trModule_s19w $trModule_s19y

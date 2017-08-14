@@ -7,26 +7,26 @@ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Exp
 myId = \ (@ p) (x  :: p) -> x
 
 
-$trModule_sWV  :: Addr#
+$trModule_sYz  :: Addr#
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0 }]
-$trModule_sWV = "main"#
+$trModule_sYz = "main"#
 
 
-$trModule_sWU  :: TrName
+$trModule_sYy  :: TrName
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$trModule_sWU = TrNameS $trModule_sWV
+$trModule_sYy = TrNameS $trModule_sYz
 
 
-$trModule_sWX  :: Addr#
+$trModule_sYB  :: Addr#
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0 }]
-$trModule_sWX = "F"#
+$trModule_sYB = "F"#
 
 
-$trModule_sWW  :: TrName
+$trModule_sYA  :: TrName
 [LclId, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 20 }]
-$trModule_sWW = TrNameS $trModule_sWX
+$trModule_sYA = TrNameS $trModule_sYB
 
 
 $trModule  :: Module
 [LclIdX, Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True, WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 30 }]
-$trModule = Module $trModule_sWU $trModule_sWW
+$trModule = Module $trModule_sYy $trModule_sYA
