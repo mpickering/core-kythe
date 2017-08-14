@@ -187,7 +187,7 @@ makeModuleTick hmod = ModuleTick
 
 makePkgModule :: Module -> PkgModule
 makePkgModule (Module uid modname)
-  = PkgModule { getPackage = T.pack (FS.unpackFS (unitIdFS uid))
+  = PkgModule { getPackage = "main" -- T.pack (FS.unpackFS (unitIdFS uid))
               , getModule =  T.pack (moduleNameString modname)  }
 
 makeSourcePath :: FilePath -> SourcePath
@@ -323,7 +323,7 @@ whatCore (PCoreExpr e) ss =
       -- This keeps the outermost sourceNote
       --sourceNoteMap %= (M.insert enclosingSpan (ss, sn))
       -- Make the end tick from the info we have (hopefully)
-      let endTick = Tick
+      let endTick = traceShowId $ Tick
             { tickSourcePath = makeSourcePath (FS.unpackFS $ GHC.srcSpanFile ss)
             , tickPkgModule = makePkgModule m
             , tickThing = (T.pack sn)
