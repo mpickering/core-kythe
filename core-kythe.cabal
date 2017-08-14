@@ -19,7 +19,7 @@ library
   exposed-modules: KythePlugin
   -- other-modules:
   -- other-extensions:
-  build-depends:       base >=4.9 && <4.11, ghc, prettyprinter, text, mtl, lens, haskell-indexer-translate, filepath, conduit, mmorph, haskell-indexer-frontend-kythe, bytestring, kythe-schema, proto-lens
+  build-depends:       base >=4.9 && <4.11, ghc, prettyprinter, text, mtl, lens, haskell-indexer-translate, filepath, conduit, mmorph, haskell-indexer-frontend-kythe, bytestring, kythe-schema, proto-lens, containers
   hs-source-dirs:      src
   ghc-options: -Wall -Wredundant-constraints
   default-language:    Haskell2010

@@ -5,6 +5,7 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RecursiveDo #-}
 module KythePlugin(plugin) where
 
 import Data.Text.Prettyprint.Doc
@@ -56,20 +57,29 @@ import Language.Haskell.Indexer.Frontend.Kythe
 import Data.Conduit.List (chunksOf)
 import Data.ProtoLens ( encodeMessage )
 import Data.Bits
+import Control.Applicative
+import qualified Data.Map as M
 
 -- DataTypes
 
-data Pos = Pos { _x :: Int, _y :: Int } deriving Show
+data Pos = Pos { _x :: Int, _y :: Int } deriving (Eq, Ord, Show)
+
+--instance Ord Name where
+--  compare n1 n2 = getKey (nameUnique n1) `compare` getKey (nameUnique n2)
 
 data OutputState = OutputState { _pos :: Pos
-                               , _nameMap :: NameEnv Tick
+                               , _topNameMap :: NameEnv Tick
+                               , _localNameMap :: M.Map (Name, SrcSpan) Tick -- Span is the span of the enclosing bind
                                , _binderMap :: NameEnv Span
-                                                }
+                               }
+
+data Scope = TopLevel | Local
 
 data OutputReader = OutputReader { _outFile :: FilePath
-                                 , _curModule :: Module }
+                                 , _curModule :: Module
+                                 , _curDeclSpan :: SrcSpan }
 
-data SrcSpan = SS Pos Pos FilePath deriving Show
+data SrcSpan = SS Pos Pos FilePath deriving (Show, Ord, Eq)
 
 
 makeLenses ''OutputState
@@ -123,7 +133,7 @@ doPrint outdir mgs@ModGuts{mg_binds, mg_module} = do
     --liftIO $ T.putStrLn pprint
     --liftIO $ putStrLn $ showXrefs xrefs (view nameMap st)
     liftIO $ T.writeFile outpath pprint
-    let xref = toXRef mg_module outpath xrefs (view nameMap st)
+    let xref = toXRef mg_module outpath xrefs (view topNameMap st) (view localNameMap st)
     liftIO $ output outpath entriesPath xref
     return mgs
 
@@ -159,26 +169,26 @@ makeSourcePath fp = SourcePath (T.pack fp)
 
 -- The intermediate type we use
 data XRefs = XRefs [Decl]  -- Decls
-                   (NameEnv Tick -> [TickReference]) -- Delayed references, the nameenv
+                   (M.Map (Name, SrcSpan) Tick -> NameEnv Tick -> [TickReference]) -- Delayed references, the nameenv
                                                      -- is a map from decl
                                                      -- name to their ticks
 
 --showXrefs ::  XRefs -> NameEnv Tick -> String
 --showXrefs (XRefs ds nets)  ne = show (ds, nets ne)
 
-toXRef :: Module -> FilePath -> XRefs -> NameEnv Tick -> XRef
-toXRef hmod fp (XRefs ds nets)  ne =
+toXRef :: Module -> FilePath -> XRefs -> NameEnv Tick -> M.Map (Name, SrcSpan) Tick -> XRef
+toXRef hmod fp (XRefs ds nets)  ne le=
     XRef { xrefFile      = makeAnalysedFile fp
     , xrefModule    = makeModuleTick hmod
     , xrefDecls     = ds
-    , xrefCrossRefs = nets ne
+    , xrefCrossRefs = nets le ne
     , xrefRelations = []
     , xrefImports   = []
     }
 
 instance Monoid XRefs where
-  mempty = XRefs [] (const [])
-  (XRefs ds trs) `mappend` (XRefs ds' trs') = XRefs (ds ++ ds') (\d -> trs d ++ trs' d)
+  mempty = XRefs [] (\ _ _ -> [])
+  (XRefs ds trs) `mappend` (XRefs ds' trs') = XRefs (ds ++ ds') (\d e -> trs d e ++ trs' d e)
 
 type Output a = ReaderT OutputReader (StateT OutputState (WriterT XRefs Identity)) a
 
@@ -203,8 +213,22 @@ render ast = go (treeForm (layoutPretty customLayoutOptions ast))
           pos . y %= (+1)
           pos . x .= (i + 1) -- 1-indexing
           return (T.singleton '\n' <> T.replicate i " ")
-        STAnn ann rest -> do
-          (ss, res) <- withSS (go rest)
+        -- The control flow here is quite difficult.
+        -- 1) We need to print out the thing recursively in order to get
+        -- the whole span of the thing we are going to annotate
+        -- 2) BUT we need to know the ticks of things in the outer scope
+        -- in order to generate references for things in the inner scope.
+        --
+        -- The first attempt here made whatCore return a function
+        -- NameEnv Tick -> TickReferences which collected all the decls and
+        -- then resolved the references but this doesn't work for locally
+        -- scoped things which causes reference clashes.
+        STAnn ann rest -> mdo
+          let k m = case ann of
+                    PBind {} ->
+                      local (\s -> set curDeclSpan ss s) m
+                    _ -> m
+          (ss, res) <- k (withSS (go rest))
           whatCore ann ss >>= tell
           return res
 
@@ -226,12 +250,12 @@ whatCore (PCoreExpr e) ss =
   case e of
     GHC.Lam b eb -> do
       let (bs, _e') = collectBinders eb
-      (\d -> XRefs d (const [])) <$> mapMaybeM (goMakeDecl ss) (b:bs)
+      (\d -> XRefs d (\ _ _ -> [])) <$> mapMaybeM (goMakeDecl Local ss) (b:bs)
     GHC.Let b _e ->
-      (\d -> XRefs d (const [])) <$> makeDecl b ss
+      (\d -> XRefs d (\ _ _ -> [])) <$> makeDecl Local b ss
     GHC.Case _ b _ as -> do
       let binders = concatMap (\(_, bs, _) -> bs) as
-      (\d -> XRefs d (const [])) <$> mapMaybeM (goMakeDecl ss) (b:binders) -- Not sure what this b is fore
+      (\d -> XRefs d (\ _ _ -> [])) <$> mapMaybeM (goMakeDecl Local ss) (b:binders) -- Not sure what this b is fore
     _ -> return mempty
 {-
   case e of
@@ -245,28 +269,31 @@ whatCore (PCoreExpr e) ss =
     GHC.Type {} -> "Type"
     GHC.Coercion {} -> "Co"
 -}
-whatCore (PBind b) ss =
-  (\d -> XRefs d (const [])) <$> makeDecl b ss
+whatCore (PBind b) ss = do
+  (\d -> XRefs d (\_ _ -> [])) <$> makeDecl TopLevel b ss
 whatCore (PVar b v) ss  =
   case b of
     Binder ->   do
       addBinder v ss -- We already print out binding sites as decls but need
+      --traceM ("Adding binder info for: " ++ show (getOccString v) ++ show ss)
       return mempty
                                  -- to record exactly where the binder is
                                  -- for better highlighting
     Reference -> do
       outf <- view outFile
       cm <- view curModule
-      let rt n = maybeToList (makeReferenceTick outf cm (getName v) (cvtSrcSpan ss) n)
+      enclosingSpan <- view curDeclSpan
+      let rt localEnv n = maybeToList (makeReferenceTick outf cm (getName v) (cvtSrcSpan ss) enclosingSpan localEnv n)
       return $ XRefs [] rt -- References generate reference ticks
 
-makeReferenceTick :: FilePath -> Module -> Name -> Span -> NameEnv Tick -> Maybe TickReference
-makeReferenceTick outf cm n ss nenv =
-  case lookupNameEnv nenv n of
+makeReferenceTick :: FilePath -> Module -> Name -> Span -> SrcSpan -> M.Map (Name, SrcSpan) Tick -> NameEnv Tick -> Maybe TickReference
+makeReferenceTick outf cm n ss enclosingSpan localEnv nenv =
+  case lookupNameEnv nenv n <|> M.lookup (n, enclosingSpan) localEnv of
     -- For debugging for now
     Nothing -> do
-      -- Names without local definitions
---      traceM ("Couldn't find name in nameenv: " ++ show (getOccString n) ++ show ss)
+      -- Names without in-module definitions
+      traceM ("Couldn't find name in nameenv: " ++ show (getOccString n) ++ show ss)
+--      traceM (show $ nameEnvElts localEnv)
       let refTargetTick = nameInModuleToTick Nothing outf cm n
           refSourceSpan = ss
           refHighLevelContext = Nothing
@@ -278,17 +305,21 @@ makeReferenceTick outf cm n ss nenv =
           refSourceSpan = ss
           refHighLevelContext = Nothing -- Need to set this by setting the name ctxt in reader state
           refKind = Ref -- This needs additional information from PprCore, I think it's possible to add
-      in Just $ TickReference{..}
+      in do
+
+        --when (getOccString n == "t")
+        --  (traceM ("Adding reference tick for: " ++ show (getOccString n) ++ show t))
+        Just $ TickReference{..}
 
 
-makeDecl :: forall b . (NamedThing b) => Bind b -> SrcSpan -> Output [Decl]
-makeDecl bi  ss =
+makeDecl :: forall b . (NamedThing b) => Scope -> Bind b -> SrcSpan -> Output [Decl]
+makeDecl sc bi  ss =
   case bi of
-    NonRec b _eb -> maybeToList <$> goMakeDecl ss b
-    Rec bs -> mapMaybeM (goMakeDecl ss . fst) bs
+    NonRec b _eb -> maybeToList <$> goMakeDecl sc ss b
+    Rec bs -> mapMaybeM (goMakeDecl sc ss . fst) bs
 
-goMakeDecl :: NamedThing b => SrcSpan -> b -> Output (Maybe Decl)
-goMakeDecl ss b =
+goMakeDecl :: NamedThing b => Scope -> SrcSpan -> b -> Output (Maybe Decl)
+goMakeDecl topLevel ss b =
       let
           declType = StringyType "" ""
           declExtra = Nothing
@@ -301,7 +332,14 @@ goMakeDecl ss b =
             return Nothing
           Just ss -> do
             declTick <- makeDeclTick (name) ss
-            nameMap %= (\n -> extendNameEnv n (name) declTick)
+            case topLevel of
+              TopLevel -> do
+                traceM ("Adding to top name map" ++ getOccString name)
+                topNameMap %= (\n -> extendNameEnv n (name) declTick)
+              Local -> do
+                traceM ("Adding to local name map: " ++ getOccString name)
+                enclosingSpan <- view curDeclSpan
+                localNameMap %= (M.insert (name, enclosingSpan) declTick)
             return (Just $ Decl{..})
 
 nameInModuleToTick :: Maybe Span -> FilePath -> Module -> Name -> Tick
@@ -341,18 +379,21 @@ nameModuleWithInternal homeModule name = fromMaybe homeModule (nameModule_maybe 
 
 
 addBinder :: NamedThing b => b -> SrcSpan -> Output ()
-addBinder b ss = binderMap %= (\n -> extendNameEnv n (getName b) (cvtSrcSpan ss))
+addBinder b ss = binderMap %=
+                  (\n -> extendNameEnv_C (\old new -> traceShow ("Warning overwriting",(getOccString b), old, new) new) n (getName b) (cvtSrcSpan ss))
+-- This overwriting is not too bad as the binder map is only used to give
+-- precise locations of binders. It seems to work ok.
 
 -- Running the monad
 
 initialState :: OutputState
-initialState = OutputState (Pos 1 1) emptyNameEnv emptyNameEnv
+initialState = OutputState (Pos 1 1) emptyNameEnv M.empty emptyNameEnv
 
 runRender :: FilePath -> Module -> Output T.Text -> ((T.Text, OutputState), XRefs)
 runRender fp m = runIdentity . runWriterT . flip runStateT initialState
                                         . flip runReaderT initialReader
   where
-    initialReader = OutputReader fp m
+    initialReader = OutputReader fp m undefined
 
 -- Final Conversion
 
