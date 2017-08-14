@@ -6,6 +6,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE TupleSections #-}
 module KythePlugin(plugin) where
 
 import Data.Text.Prettyprint.Doc
@@ -34,7 +35,7 @@ import UniqFM (nonDetUFMToList, listToUFM_Directly, plusUFM )
 import Control.Arrow (first)
 import qualified SrcLoc as GHC
 import Module hiding (getModule)
-import qualified GhcPlugins as GHC ( getModule, Expr(..) )
+import qualified GhcPlugins as GHC ( getModule, Expr(..), Tickish(..) )
 import Language.Haskell.Indexer.Translate hiding (Pos(..))
 import qualified Language.Haskell.Indexer.Translate as P (Pos(..))
 import CoreSyn hiding (Expr (..))
@@ -71,6 +72,7 @@ data OutputState = OutputState { _pos :: Pos
                                , _topNameMap :: NameEnv Tick
                                , _localNameMap :: M.Map (Name, SrcSpan) Tick -- Span is the span of the enclosing bind
                                , _binderMap :: NameEnv Span
+                               , _sourceNoteMap :: M.Map SrcSpan (GHC.RealSrcSpan, String)
                                }
 
 data Scope = TopLevel | Local
@@ -79,12 +81,26 @@ data OutputReader = OutputReader { _outFile :: FilePath
                                  , _curModule :: Module
                                  , _curDeclSpan :: SrcSpan }
 
-data SrcSpan = SS Pos Pos FilePath deriving (Show, Ord, Eq)
+data SrcSpan = SS Pos Pos FilePath deriving (Show, Eq)
+
+instance Ord SrcSpan where
+  (SS p1 p2 fp) `compare` (SS p3 p4 fp')
+    = if p1 <= p3 && p2 >= p4 then LT else GT
+
+
+-- The intermediate type we use
+data XRefs = XRefs { _outDecls :: [Decl]  -- Decls
+                   , _outReferences :: (M.Map (Name, SrcSpan) Tick -> NameEnv Tick
+                                                                  -> [TickReference])
+                   -- Delayed references, the nameenv
+                   -- is a map from decl name to their ticks
+                   , _outRelations :: M.Map Span Tick -> [Relation] } -- Generates edges
 
 
 makeLenses ''OutputState
 makeLenses ''OutputReader
 makeLenses ''Pos
+makeLenses ''XRefs
 
 cvtSrcSpan :: SrcSpan -> Span
 cvtSrcSpan (SS (Pos x1 y1) (Pos x2 y2) fp) =
@@ -120,7 +136,7 @@ printPass :: FilePath -> CoreToDo
 printPass fp = CoreDoPluginPass "Print Pass" (doPrint fp)
 
 doPrint :: FilePath -> ModGuts -> CoreM ModGuts
-doPrint outdir mgs@ModGuts{mg_binds, mg_module} = do
+doPrint outdir mgs@ModGuts{mg_binds, mg_module, mg_rdr_env} = do
     let outpath = makeOutPath outdir mg_module
         entriesPath = makeEntriesPath outdir mg_module
     --liftIO $ putStrLn outpath
@@ -133,9 +149,20 @@ doPrint outdir mgs@ModGuts{mg_binds, mg_module} = do
     --liftIO $ T.putStrLn pprint
     --liftIO $ putStrLn $ showXrefs xrefs (view nameMap st)
     liftIO $ T.writeFile outpath pprint
-    let xref = toXRef mg_module outpath xrefs (view topNameMap st) (view localNameMap st)
+    --liftIO $ print (view sourceNoteMap st) mg_rdr_env
+    --let rels = processSourceNotes (view sourceNoteMap st)
+    let xref = toXRef mg_module outpath xrefs (view topNameMap st)
+                                              (view localNameMap st)
+
     liftIO $ output outpath entriesPath xref
     return mgs
+
+{-
+processSourceNotes :: M.Map SrcSpan (GHC.RealSrcSpan, String)
+                   -> GlobalRdrEnv
+                   -> [Relation]
+processSourceNotes
+-}
 
 lenientDecodeUtf8 :: FilePath -> IO T.Text
 lenientDecodeUtf8 = fmap (T.decodeUtf8With T.lenientDecode) . B.readFile
@@ -167,28 +194,35 @@ makeSourcePath :: FilePath -> SourcePath
 makeSourcePath fp = SourcePath (T.pack fp)
 
 
--- The intermediate type we use
-data XRefs = XRefs [Decl]  -- Decls
-                   (M.Map (Name, SrcSpan) Tick -> NameEnv Tick -> [TickReference]) -- Delayed references, the nameenv
-                                                     -- is a map from decl
-                                                     -- name to their ticks
+writeDecl :: Decl -> XRefs
+writeDecl d = writeDecls [d]
 
---showXrefs ::  XRefs -> NameEnv Tick -> String
---showXrefs (XRefs ds nets)  ne = show (ds, nets ne)
+writeDecls :: [Decl] -> XRefs
+writeDecls d = set outDecls d mempty
+
+type DelayedTickReference = M.Map (Name, SrcSpan) Tick -> NameEnv Tick -> [TickReference]
+
+
+writeReference :: DelayedTickReference -> XRefs
+writeReference dt  = set outReferences dt mempty
+
+writeRelation :: (M.Map Span Tick  -> Relation) -> XRefs
+writeRelation r = set outRelations (\m -> [r m]) mempty
 
 toXRef :: Module -> FilePath -> XRefs -> NameEnv Tick -> M.Map (Name, SrcSpan) Tick -> XRef
-toXRef hmod fp (XRefs ds nets)  ne le=
+toXRef hmod fp (XRefs ds nets rs)  ne le=
     XRef { xrefFile      = makeAnalysedFile fp
     , xrefModule    = makeModuleTick hmod
     , xrefDecls     = ds
     , xrefCrossRefs = nets le ne
-    , xrefRelations = []
+    , xrefRelations = rs (traceShowId (toSSMap ne))
     , xrefImports   = []
     }
 
 instance Monoid XRefs where
-  mempty = XRefs [] (\ _ _ -> [])
-  (XRefs ds trs) `mappend` (XRefs ds' trs') = XRefs (ds ++ ds') (\d e -> trs d e ++ trs' d e)
+  mempty = XRefs [] (\ _ _ -> []) (\_ -> [])
+  (XRefs ds trs rs) `mappend` (XRefs ds' trs' rs') =
+    XRefs (ds ++ ds') (\d e -> trs d e ++ trs' d e) (\d -> rs d ++ rs' d)
 
 type Output a = ReaderT OutputReader (StateT OutputState (WriterT XRefs Identity)) a
 
@@ -235,6 +269,29 @@ render ast = go (treeForm (layoutPretty customLayoutOptions ast))
 
         STConcat xs -> fmap mconcat (traverse go xs)
 
+
+{-
+NOTE: SourceNotes
+
+We want to generate edges from core bindings to what generated them.
+We can do this with SourceNotes, we can't express too much granularity as
+we need to link together nodes. So for now we just use the information in the
+first source note to link a whole definition to one place in the source file.
+
+Our strategy is to not directly generate the edges at first. We want to later
+iterate over GlobalRdrElt and pick possible definition sites for each of the things we
+find in there. We do this by consulting the name of everything in GlobalRdrElt and finding
+SrcSpans which *start* at the same place as one of the references.
+
+We then have enough information to emit an edge.
+
+So when first using whatCore, we just write the first SourceNote into a map
+from ContainingDecl -> SourceNote, we only keep the outermost span which is the last
+one which is written. Once done, we invert the map into SourceNote -> [ContainingDecl]
+and use the SrcLoc name to find which edges we need to emit.
+
+-}
+
 -- Returns the Source span of the result of outputing the thing
 withSS :: Output a -> Output (SrcSpan, a)
 withSS o = do
@@ -244,18 +301,48 @@ withSS o = do
   out <- view outFile
   return ((SS p p' out), res)
 
+toSSMap :: NameEnv Tick -> M.Map Span Tick
+toSSMap n = M.fromList $ catMaybes ([(,t) <$> tickSpan t | t <- (nameEnvElts n)])
+
 whatCore :: PExpr -> SrcSpan -> Output XRefs
 whatCore (PCoreExpr e) ss =
 -- Need to particularlly deal with binders here
   case e of
     GHC.Lam b eb -> do
       let (bs, _e') = collectBinders eb
-      (\d -> XRefs d (\ _ _ -> [])) <$> mapMaybeM (goMakeDecl Local ss) (b:bs)
+      writeDecls <$> mapMaybeM (goMakeDecl Local ss) (b:bs)
     GHC.Let b _e ->
-      (\d -> XRefs d (\ _ _ -> [])) <$> makeDecl Local b ss
+      writeDecls <$> makeDecl Local b ss
     GHC.Case _ b _ as -> do
       let binders = concatMap (\(_, bs, _) -> bs) as
-      (\d -> XRefs d (\ _ _ -> [])) <$> mapMaybeM (goMakeDecl Local ss) (b:binders) -- Not sure what this b is fore
+      writeDecls <$> mapMaybeM (goMakeDecl Local ss) (b:binders) -- Not sure what this b is fore
+    GHC.Tick (GHC.SourceNote ss sn) e -> do
+      enclosingSpan <- view curDeclSpan
+      m <- view curModule
+      -- 1. Use the enclosingSpan tick to find the actual tick
+      -- This keeps the outermost sourceNote
+      --sourceNoteMap %= (M.insert enclosingSpan (ss, sn))
+      -- Make the end tick from the info we have (hopefully)
+      let endTick = Tick
+            { tickSourcePath = makeSourcePath (FS.unpackFS $ GHC.srcSpanFile ss)
+            , tickPkgModule = makePkgModule m
+            , tickThing = (T.pack sn)
+            -- If we pass in a SrcSpan, otherwise use a random one so that
+            -- we can still emit references
+            , tickSpan = cvtGhcSrcSpan (GHC.RealSrcSpan ss)
+            , tickUniqueInModule = True
+            , tickTermLevel = True
+            }
+      -- Use lookupLT here are the ordering is by inclusion.
+      -- s1 < s2 iff s1 is enclosed by s2
+      let lup env = case M.lookupGT (cvtSrcSpan enclosingSpan) env of
+                      Nothing -> error (show env ++ show enclosingSpan)
+                      Just v -> traceShow (fst v, enclosingSpan) (snd v)
+      return $ writeRelation (\env -> Relation endTick (Generates "haskell") (lup env))
+      --return mempty
+
+
+
     _ -> return mempty
 {-
   case e of
@@ -270,7 +357,7 @@ whatCore (PCoreExpr e) ss =
     GHC.Coercion {} -> "Co"
 -}
 whatCore (PBind b) ss = do
-  (\d -> XRefs d (\_ _ -> [])) <$> makeDecl TopLevel b ss
+ writeDecls <$> makeDecl TopLevel b ss
 whatCore (PVar b v) ss  =
   case b of
     Binder ->   do
@@ -284,7 +371,7 @@ whatCore (PVar b v) ss  =
       cm <- view curModule
       enclosingSpan <- view curDeclSpan
       let rt localEnv n = maybeToList (makeReferenceTick outf cm (getName v) (cvtSrcSpan ss) enclosingSpan localEnv n)
-      return $ XRefs [] rt -- References generate reference ticks
+      return $ writeReference rt -- References generate reference ticks
 
 makeReferenceTick :: FilePath -> Module -> Name -> Span -> SrcSpan -> M.Map (Name, SrcSpan) Tick -> NameEnv Tick -> Maybe TickReference
 makeReferenceTick outf cm n ss enclosingSpan localEnv nenv =
@@ -342,6 +429,7 @@ goMakeDecl topLevel ss b =
                 localNameMap %= (M.insert (name, enclosingSpan) declTick)
             return (Just $ Decl{..})
 
+
 nameInModuleToTick :: Maybe Span -> FilePath -> Module -> Name -> Tick
 nameInModuleToTick ss sourcePath cm n =
     Tick
@@ -354,6 +442,7 @@ nameInModuleToTick ss sourcePath cm n =
       , tickUniqueInModule = isExternalName n
       , tickTermLevel = isValName n
       }
+
 
 makeDeclTick :: Name -> Span -> Output Tick
 makeDeclTick n ss = do
@@ -387,7 +476,7 @@ addBinder b ss = binderMap %=
 -- Running the monad
 
 initialState :: OutputState
-initialState = OutputState (Pos 1 1) emptyNameEnv M.empty emptyNameEnv
+initialState = OutputState (Pos 1 1) emptyNameEnv M.empty emptyNameEnv M.empty
 
 runRender :: FilePath -> Module -> Output T.Text -> ((T.Text, OutputState), XRefs)
 runRender fp m = runIdentity . runWriterT . flip runStateT initialState
