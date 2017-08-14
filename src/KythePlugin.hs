@@ -358,7 +358,7 @@ runRender fp m = runIdentity . runWriterT . flip runStateT initialState
 
 output :: FilePath -> FilePath -> XRef -> IO ()
 output infile outfile xref = do
-  let baseVName = Raw.VName "" "" "" "" "core-haskell"
+  let baseVName = Raw.VName "" "core-kythe" "" "" "core-haskell"
   collect infile outfile baseVName xref
 
 
