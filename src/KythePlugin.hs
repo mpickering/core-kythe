@@ -22,17 +22,13 @@ import qualified Data.Text.Encoding as T
 import qualified Data.Text.Encoding.Error as T
 import qualified Data.Text.IO as T
 import PprCore
-import Unique (getKey, mkUniqueGrimily)
 import qualified FastString as FS
 import Outputable (SDoc(..))
 import OutputableAnnotation
 import GhcPlugins (Plugin(..), defaultPlugin, CoreM, CoreToDo(..), CommandLineOption, ModGuts(..)
                   , getDynFlags, defaultUserStyle, initSDocContext, Module
                   , NamedThing(..), Name, isValName, RealSrcLoc)
-import PrelNames ( wildCardName )
 import Name
-import UniqFM (nonDetUFMToList, listToUFM_Directly, plusUFM )
-import Control.Arrow (first)
 import qualified SrcLoc as GHC
 import Module hiding (getModule)
 import qualified GhcPlugins as GHC ( getModule, Expr(..), Tickish(..) )
@@ -72,7 +68,6 @@ data OutputState = OutputState { _pos :: Pos
                                , _topNameMap :: NameEnv Tick
                                , _localNameMap :: M.Map (Name, SrcSpan) Tick -- Span is the span of the enclosing bind
                                , _binderMap :: NameEnv Span
-                               , _sourceNoteMap :: M.Map SrcSpan (GHC.RealSrcSpan, String)
                                }
 
 data Scope = TopLevel | Local
@@ -85,7 +80,7 @@ data SrcSpan = SS Pos Pos FilePath deriving (Show, Eq)
 
 instance Ord SrcSpan where
   (SS p1 p2 fp) `compare` (SS p3 p4 fp')
-    = if p1 <= p3 && p2 >= p4 then LT else GT
+    = (fp `compare` fp') `mappend` (if p1 <= p3 && p2 >= p4 then LT else GT)
 
 
 -- The intermediate type we use
@@ -136,7 +131,7 @@ printPass :: FilePath -> CoreToDo
 printPass fp = CoreDoPluginPass "Print Pass" (doPrint fp)
 
 doPrint :: FilePath -> ModGuts -> CoreM ModGuts
-doPrint outdir mgs@ModGuts{mg_binds, mg_module, mg_rdr_env} = do
+doPrint outdir mgs@ModGuts{mg_binds, mg_module} = do
     let outpath = makeOutPath outdir mg_module
         entriesPath = makeEntriesPath outdir mg_module
     --liftIO $ putStrLn outpath
@@ -149,20 +144,12 @@ doPrint outdir mgs@ModGuts{mg_binds, mg_module, mg_rdr_env} = do
     --liftIO $ T.putStrLn pprint
     --liftIO $ putStrLn $ showXrefs xrefs (view nameMap st)
     liftIO $ T.writeFile outpath pprint
-    --liftIO $ print (view sourceNoteMap st) mg_rdr_env
-    --let rels = processSourceNotes (view sourceNoteMap st)
     let xref = toXRef mg_module outpath xrefs (view topNameMap st)
                                               (view localNameMap st)
 
     liftIO $ output outpath entriesPath xref
     return mgs
 
-{-
-processSourceNotes :: M.Map SrcSpan (GHC.RealSrcSpan, String)
-                   -> GlobalRdrEnv
-                   -> [Relation]
-processSourceNotes
--}
 
 lenientDecodeUtf8 :: FilePath -> IO T.Text
 lenientDecodeUtf8 = fmap (T.decodeUtf8With T.lenientDecode) . B.readFile
@@ -195,10 +182,6 @@ makePkgModule (Module uid modname)
 
 makeSourcePath :: FilePath -> SourcePath
 makeSourcePath fp = SourcePath (T.pack fp)
-
-
-writeDecl :: Decl -> XRefs
-writeDecl d = writeDecls [d]
 
 writeDecls :: [Decl] -> XRefs
 writeDecls d = set outDecls d mempty
@@ -273,28 +256,6 @@ render ast = go (treeForm (layoutPretty customLayoutOptions ast))
         STConcat xs -> fmap mconcat (traverse go xs)
 
 
-{-
-NOTE: SourceNotes
-
-We want to generate edges from core bindings to what generated them.
-We can do this with SourceNotes, we can't express too much granularity as
-we need to link together nodes. So for now we just use the information in the
-first source note to link a whole definition to one place in the source file.
-
-Our strategy is to not directly generate the edges at first. We want to later
-iterate over GlobalRdrElt and pick possible definition sites for each of the things we
-find in there. We do this by consulting the name of everything in GlobalRdrElt and finding
-SrcSpans which *start* at the same place as one of the references.
-
-We then have enough information to emit an edge.
-
-So when first using whatCore, we just write the first SourceNote into a map
-from ContainingDecl -> SourceNote, we only keep the outermost span which is the last
-one which is written. Once done, we invert the map into SourceNote -> [ContainingDecl]
-and use the SrcLoc name to find which edges we need to emit.
-
--}
-
 -- Returns the Source span of the result of outputing the thing
 withSS :: Output a -> Output (SrcSpan, a)
 withSS o = do
@@ -308,36 +269,31 @@ toSSMap :: NameEnv Tick -> M.Map Span Tick
 toSSMap n = M.fromList $ catMaybes ([(,t) <$> tickSpan t | t <- (nameEnvElts n)])
 
 whatCore :: PExpr -> SrcSpan -> Output XRefs
-whatCore (PCoreExpr e) ss =
+whatCore (PCoreExpr e) _ss =
 -- Need to particularlly deal with binders here
   case e of
     GHC.Lam b eb -> do
       let (bs, _e') = collectBinders eb
-      writeDecls <$> mapMaybeM (goMakeDecl Local ss) (b:bs)
+      writeDecls <$> mapMaybeM (goMakeDecl Local) (b:bs)
     GHC.Let b _e ->
-      writeDecls <$> makeDecl Local b ss
+      writeDecls <$> makeDecl Local b
     GHC.Case _ b _ as -> do
       let binders = concatMap (\(_, bs, _) -> bs) as
-      writeDecls <$> mapMaybeM (goMakeDecl Local ss) (b:binders) -- Not sure what this b is fore
-    GHC.Tick (GHC.SourceNote ss sn) e -> do
+      writeDecls <$> mapMaybeM (goMakeDecl Local) (b:binders) -- Not sure what this b is fore
+    GHC.Tick (GHC.SourceNote ss sn) _e -> do
       enclosingSpan <- view curDeclSpan
       m <- view curModule
-      -- 1. Use the enclosingSpan tick to find the actual tick
-      -- This keeps the outermost sourceNote
-      --sourceNoteMap %= (M.insert enclosingSpan (ss, sn))
       -- Make the end tick from the info we have (hopefully)
       let endTick = traceShowId $ Tick
             { tickSourcePath = makeSourcePath (FS.unpackFS $ GHC.srcSpanFile ss)
             , tickPkgModule = makePkgModule m
             , tickThing = (T.pack sn)
-            -- If we pass in a SrcSpan, otherwise use a random one so that
-            -- we can still emit references
             , tickSpan = cvtGhcSrcSpan (GHC.RealSrcSpan ss)
             , tickUniqueInModule = True
             , tickTermLevel = True
             }
-      -- Use lookupLT here are the ordering is by inclusion.
-      -- s1 < s2 iff s1 is enclosed by s2
+      -- Use lookupGT here are the ordering is by inclusion.
+      -- s1 < s2 iff s2 is enclosed by s1
       let lup env = case M.lookupGT (cvtSrcSpan enclosingSpan) env of
                       Nothing -> error (show env ++ show enclosingSpan)
                       Just v -> traceShow (fst v, enclosingSpan) (snd v)
@@ -359,8 +315,8 @@ whatCore (PCoreExpr e) ss =
     GHC.Type {} -> "Type"
     GHC.Coercion {} -> "Co"
 -}
-whatCore (PBind b) ss = do
- writeDecls <$> makeDecl TopLevel b ss
+whatCore (PBind b) _ss = do
+ writeDecls <$> makeDecl TopLevel b
 whatCore (PVar b v) ss  =
   case b of
     Binder ->   do
@@ -402,14 +358,14 @@ makeReferenceTick outf cm n ss enclosingSpan localEnv nenv =
         Just $ TickReference{..}
 
 
-makeDecl :: forall b . (NamedThing b) => Scope -> Bind b -> SrcSpan -> Output [Decl]
-makeDecl sc bi  ss =
+makeDecl :: forall b . (NamedThing b) => Scope -> Bind b -> Output [Decl]
+makeDecl sc bi =
   case bi of
-    NonRec b _eb -> maybeToList <$> goMakeDecl sc ss b
-    Rec bs -> mapMaybeM (goMakeDecl sc ss . fst) bs
+    NonRec b _eb -> maybeToList <$> goMakeDecl sc b
+    Rec bs -> mapMaybeM (goMakeDecl sc . fst) bs
 
-goMakeDecl :: NamedThing b => Scope -> SrcSpan -> b -> Output (Maybe Decl)
-goMakeDecl topLevel ss b =
+goMakeDecl :: NamedThing b => Scope -> b -> Output (Maybe Decl)
+goMakeDecl topLevel b =
       let
           declType = StringyType "" ""
           declExtra = Nothing
@@ -420,8 +376,8 @@ goMakeDecl topLevel ss b =
           Nothing -> do
             traceShowM ((nameOccurenceText $ name), declIdentifierSpan)
             return Nothing
-          Just ss -> do
-            declTick <- makeDeclTick (name) ss
+          Just declIdSpan -> do
+            declTick <- makeDeclTick (name) declIdSpan
             case topLevel of
               TopLevel -> do
                 traceM ("Adding to top name map" ++ getOccString name)
@@ -472,14 +428,15 @@ nameModuleWithInternal homeModule name = fromMaybe homeModule (nameModule_maybe 
 
 addBinder :: NamedThing b => b -> SrcSpan -> Output ()
 addBinder b ss = binderMap %=
-                  (\n -> extendNameEnv_C (\old new -> traceShow ("Warning overwriting",(getOccString b), old, new) new) n (getName b) (cvtSrcSpan ss))
+                  (\n -> extendNameEnv_C (\_old new -> new) n (getName b) (cvtSrcSpan ss))
+                      -- traceShow ("Warning overwriting",(getOccString b), old, new) new)
 -- This overwriting is not too bad as the binder map is only used to give
 -- precise locations of binders. It seems to work ok.
 
 -- Running the monad
 
 initialState :: OutputState
-initialState = OutputState (Pos 1 1) emptyNameEnv M.empty emptyNameEnv M.empty
+initialState = OutputState (Pos 1 1) emptyNameEnv M.empty emptyNameEnv
 
 runRender :: FilePath -> Module -> Output T.Text -> ((T.Text, OutputState), XRefs)
 runRender fp m = runIdentity . runWriterT . flip runStateT initialState
@@ -522,9 +479,6 @@ varInt n
                     <> varInt (n `shiftR` 7)
 
 -- Utility
-
-singleton :: a -> [a]
-singleton = (:[])
 
 mapMaybeM :: Monad m => (a -> m (Maybe b)) -> [a] -> m [b]
 mapMaybeM f xs = catMaybes <$> mapM f xs
