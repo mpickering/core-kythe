@@ -85,8 +85,8 @@ instance Ord SrcSpan where
 
 -- The intermediate type we use
 data XRefs = XRefs { _outDecls :: [Decl]  -- Decls
-                   , _outReferences :: (M.Map (Name, SrcSpan) Tick -> NameEnv Tick
-                                                                  -> [TickReference])
+                   , _outReferences :: M.Map (Name, SrcSpan) Tick -> NameEnv Tick
+                                                                  -> [TickReference]
                    -- Delayed references, the nameenv
                    -- is a map from decl name to their ticks
                    , _outRelations :: M.Map Span Tick -> [Relation] } -- Generates edges
@@ -174,9 +174,13 @@ makeModuleTick hmod = ModuleTick
 
 makePkgModule :: Module -> PkgModule
 makePkgModule (Module uid modname)
-  = traceShowId $ PkgModule { getPackage = T.pack (munge $ FS.unpackFS (unitIdFS uid))
+  = traceShowId PkgModule { getPackage = T.pack (munge $ FS.unpackFS (unitIdFS uid))
               , getModule =  T.pack (moduleNameString modname)  }
   where
+    -- This is necessary because of what haskell-indexer does.
+    -- Important when we generate generates edges
+    -- Should probably use their function in the long run.
+    -- https://github.com/google/haskell-indexer/blob/fffff008c47a649d0f33a4e09a4ee2e0196337f6/haskell-indexer-backend-ghc/src/Language/Haskell/Indexer/Backend/Ghc.hs#L1214
     munge "main" = "main_main"
     munge t = t
 
@@ -206,7 +210,7 @@ toXRef hmod fp (XRefs ds nets rs)  ne le=
     }
 
 instance Monoid XRefs where
-  mempty = XRefs [] (\ _ _ -> []) (\_ -> [])
+  mempty = XRefs [] (\ _ _ -> []) (const [])
   (XRefs ds trs rs) `mappend` (XRefs ds' trs' rs') =
     XRefs (ds ++ ds') (\d e -> trs d e ++ trs' d e) (\d -> rs d ++ rs' d)
 
@@ -246,7 +250,7 @@ render ast = go (treeForm (layoutPretty customLayoutOptions ast))
         STAnn ann rest -> mdo
           let k m = case ann of
                     PBind {} ->
-                      local (\s -> set curDeclSpan ss s) m
+                      local (set curDeclSpan ss) m
                     _ -> m
           (ss, res) <- k (withSS (go rest))
           whatCore ann ss >>= tell
@@ -263,10 +267,10 @@ withSS o = do
   res <- o
   p' <- use pos
   out <- view outFile
-  return ((SS p p' out), res)
+  return (SS p p' out, res)
 
 toSSMap :: NameEnv Tick -> M.Map Span Tick
-toSSMap n = M.fromList $ catMaybes ([(,t) <$> tickSpan t | t <- (nameEnvElts n)])
+toSSMap n = M.fromList $ catMaybes [(,t) <$> tickSpan t | t <- (nameEnvElts n)]
 
 whatCore :: PExpr -> SrcSpan -> Output XRefs
 whatCore (PCoreExpr e) _ss =
@@ -284,7 +288,7 @@ whatCore (PCoreExpr e) _ss =
       enclosingSpan <- view curDeclSpan
       m <- view curModule
       -- Make the end tick from the info we have (hopefully)
-      let endTick = traceShowId $ Tick
+      let endTick = traceShowId Tick
             { tickSourcePath = makeSourcePath (FS.unpackFS $ GHC.srcSpanFile ss)
             , tickPkgModule = makePkgModule m
             , tickThing = (T.pack sn)
@@ -297,7 +301,7 @@ whatCore (PCoreExpr e) _ss =
       let lup env = case M.lookupGT (cvtSrcSpan enclosingSpan) env of
                       Nothing -> error (show env ++ show enclosingSpan)
                       Just v -> traceShow (fst v, enclosingSpan) (snd v)
-      return $ writeRelation (\env -> Relation endTick (Generates "haskell") (lup env))
+      return $ writeRelation (Relation endTick (Generates "haskell") . lup)
       --return mempty
 
 
@@ -315,7 +319,7 @@ whatCore (PCoreExpr e) _ss =
     GHC.Type {} -> "Type"
     GHC.Coercion {} -> "Co"
 -}
-whatCore (PBind b) _ss = do
+whatCore (PBind b) _ss =
  writeDecls <$> makeDecl TopLevel b
 whatCore (PVar b v) ss  =
   case b of
@@ -344,17 +348,14 @@ makeReferenceTick outf cm n ss enclosingSpan localEnv nenv =
           refSourceSpan = ss
           refHighLevelContext = Nothing
           refKind = Ref
-      return $ TickReference{..}
+      return TickReference{..}
 
     Just t ->
       let refTargetTick = t
           refSourceSpan = ss
           refHighLevelContext = Nothing -- Need to set this by setting the name ctxt in reader state
           refKind = Ref -- This needs additional information from PprCore, I think it's possible to add
-      in do
-
-        --when (getOccString n == "t")
-        --  (traceM ("Adding reference tick for: " ++ show (getOccString n) ++ show t))
+      in
         Just $ TickReference{..}
 
 
@@ -371,22 +372,22 @@ goMakeDecl topLevel b =
           declExtra = Nothing
           name = getName b
       in do
-        declIdentifierSpan <- uses binderMap (\n -> lookupNameEnv n (name))
+        declIdentifierSpan <- uses binderMap (\n -> lookupNameEnv n name)
         case declIdentifierSpan of
           Nothing -> do
-            traceShowM ((nameOccurenceText $ name), declIdentifierSpan)
+            traceShowM (nameOccurenceText $ name, declIdentifierSpan)
             return Nothing
           Just declIdSpan -> do
-            declTick <- makeDeclTick (name) declIdSpan
+            declTick <- makeDeclTick name declIdSpan
             case topLevel of
               TopLevel -> do
                 traceM ("Adding to top name map" ++ getOccString name)
-                topNameMap %= (\n -> extendNameEnv n (name) declTick)
+                topNameMap %= (\n -> extendNameEnv n name declTick)
               Local -> do
                 traceM ("Adding to local name map: " ++ getOccString name)
                 enclosingSpan <- view curDeclSpan
-                localNameMap %= (M.insert (name, enclosingSpan) declTick)
-            return (Just $ Decl{..})
+                localNameMap %= M.insert (name, enclosingSpan) declTick
+            return (Just Decl{..})
 
 
 nameInModuleToTick :: Maybe Span -> FilePath -> Module -> Name -> Tick
@@ -397,7 +398,7 @@ nameInModuleToTick ss sourcePath cm n =
       , tickThing = nameOccurenceText n
       -- If we pass in a SrcSpan, otherwise use a random one so that
       -- we can still emit references
-      , tickSpan = maybe (cvtGhcSrcSpan (nameSrcSpan n)) Just  ss
+      , tickSpan = ss <|> (cvtGhcSrcSpan (nameSrcSpan n))
       , tickUniqueInModule = isExternalName n
       , tickTermLevel = isValName n
       }
