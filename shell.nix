@@ -7,7 +7,8 @@ let
   # Overloaded GHC version
   ghcWithVersion = pkgs.haskell.compiler.ghcHEAD.override { version = "8.3.20170726"; };
 
-  ghcVersion = pkgs.stdenv.lib.overrideDerivation ghcWithVersion (oldAttrs : {
+  # Special build of GHC with annotated core
+  ghc-pphead = pkgs.stdenv.lib.overrideDerivation ghcWithVersion (oldAttrs : {
                      name = "ghc-8.3.20170726";
                      src = pkgs.fetchgit {
                       url = "git://git.haskell.org/ghc.git";
@@ -17,56 +18,53 @@ let
 
   # The main plugin, built with overridden package set
   plugin =
-    onlyBuildHaskellPackages.callPackage ./default.nix {};
+    commonOverrides.callPackage ./default.nix {};
 
-  # Overrides
-  onlyBuildHaskellPackages = pkgs.haskell.packages.ghc802.override {
+  # Common Overrides for building with HEAD, also has haskell-indexer packages
+  commonOverrides = pkgs.haskell.packages.ghc802.override {
      overrides = self: super: {
        mkDerivation = args: super.mkDerivation (args // {
          doHoogle = false;
          doCheck  = false;
          doHaddock = false;
-          });
+         doIndexer = true;
+          });};
+
        # New boot modules
-       prettyprinter = null;
-       text = null;
+       #       prettyprinter = null;
+       #text = null;
 
+          # Over ride the GHC version to our custom one
+          #ghc = ghc-pphead;
+  };
 
-       # Over ride the GHC version to our custom one
-       ghc = ghcVersion;
+  ghc-pphead-final =
+    commonOverrides.override {
+      overrides =
+        self: super: {
+          # New boot modules
+          prettyprinter = null;
+          text = null;
 
-       # Specific Overrides
-       primitive = pkgs.haskell.lib.doJailbreak super.primitive;
-       vector = pkgs.haskell.lib.doJailbreak super.vector;
-       semigroupoids = super.callHackage "semigroupoids" "5.2" {} ;
-       lens = super.callHackage "lens" "4.15.3" {} ;
-       lens-labels = super.callPackage ./lens-labels.nix {};
-       proto-lens = pkgs.haskell.lib.addBuildTool (super.callPackage ./proto-lens.nix {}) pkgs.protobuf3_2;
-       proto-lens-descriptors = pkgs.haskell.lib.addBuildTool (super.callPackage ./proto-lens-descriptors.nix {}) pkgs.protobuf3_2;
-       proto-lens-protoc = pkgs.haskell.lib.addBuildTool (super.callPackage ./proto-lens-protoc.nix {}) pkgs.protobuf3_2;
-       proto-lens-combinators = pkgs.haskell.lib.addBuildTool (super.callPackage ./proto-lens-combinators.nix {}) pkgs.protobuf3_2;
-
- 	     haskell-indexer-backend-core = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/haskell-indexer-backend-core/default.nix {});
-	     haskell-indexer-backend-ghc  = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/haskell-indexer-backend-ghc/default.nix {});
-	     haskell-indexer-frontend-kythe  = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/haskell-indexer-frontend-kythe/default.nix {});
-	     haskell-indexer-pathutil 	 = super.callPackage ./haskell-indexer/haskell-indexer-pathutil/default.nix {};
-	     haskell-indexer-pipeline-ghckythe-wrapper  = super.callPackage ./haskell-indexer/haskell-indexer-pipeline-ghckythe-wrapper/default.nix {};
-	     haskell-indexer-pipeline-ghckythe = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/haskell-indexer-pipeline-ghckythe/default.nix {});
-	     haskell-indexer-translate  = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/haskell-indexer-translate/default.nix {});
-	     kythe-proto = pkgs.haskell.lib.addBuildTool (pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/kythe-proto/default.nix { kythe = kythe; })) pkgs.protobuf3_2;
-	     kythe-schema  = pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/kythe-schema/default.nix {});
-	     text-offset 	= pkgs.haskell.lib.doJailbreak (super.callPackage ./haskell-indexer/text-offset/default.nix {});
-
-
-
+          # Over ride the GHC version to our custom one
+          ghc = ghc-pphead;
         };
+    };
 
-      };
+  # The plugin which uses a custom version of HEAD
+  ghc-core-kythe = commonOverrides.ghcWithPackages (ps: [plugin]);
 
-  ghc = onlyBuildHaskellPackages.ghcWithPackages (ps: [plugin]);
+  # Haskell indexer which uses ghc802
+  ghc-haskell-indexer =
+    commonOverrides.ghcWithPackages
+      (ps : with ps;
+        (callPackage ./haskell-indexer/default.nix {}).pkgs );
+
+  indexer-test = commonOverrides.ghcWithIndexer (ps: [ps.profunctors]);
 in
   pkgs.stdenv.mkDerivation {
-    buildInputs = [ ghc kythe];
+      buildInputs = [ indexer-test kythe];
+  #    buildInputs = [ ghc-core-kythe kythe];
     shellHook = "export KYTHE_DIR=${kythe}";
     name = "env";
   }

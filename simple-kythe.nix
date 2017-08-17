@@ -36,10 +36,5 @@ stdenv.mkDerivation rec {
 
   meta = with stdenv.lib; {
     description = "";
-    homepage = http://developer.amd.com/tools/graphics-development/display-library-adl-sdk/;
-    license = licenses.unfree;
-    maintainers = [ maintainers.offline ];
-    platforms = stdenv.lib.platforms.linux;
-    hydraPlatforms = [];
   };
 }
