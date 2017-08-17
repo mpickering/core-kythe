@@ -1,0 +1,30 @@
+diff --git a/proto-lens-protoc.cabal b/proto-lens-protoc.cabal
+index 71829b0..11535d0 100644
+--- a/proto-lens-protoc.cabal
++++ b/proto-lens-protoc.cabal
+@@ -17,17 +17,7 @@ build-type:          Simple
+ cabal-version:       >=1.21
+ extra-source-files:  Changelog.md
+
+--- Work around stack bug, since we don't want to build the library
+--- during bootstrapping:
+--- https://github.com/commercialhaskell/stack/issues/1406
+-flag only-executable
+-    Description: Only build the executable.  Used for bootstrapping.
+-    Default: False
+-
+ library
+-  if flag(only-executable) {
+-      buildable: False
+-  } else {
+     exposed-modules:
+         Data.ProtoLens.Compiler.Combinators
+         Data.ProtoLens.Compiler.Definitions
+@@ -70,7 +60,6 @@ library
+         , Lens.Family2 as Data.ProtoLens.Reexport.Lens.Family2
+         , Lens.Family2.Unchecked as Data.ProtoLens.Reexport.Lens.Family2.Unchecked
+         , Lens.Labels as Data.ProtoLens.Reexport.Lens.Labels
+-    }
+
+ executable proto-lens-protoc
+   main-is:  protoc-gen-haskell.hs
