@@ -76,11 +76,15 @@ data OutputReader = OutputReader { _outFile :: FilePath
                                  , _curModule :: Module
                                  , _curDeclSpan :: SrcSpan }
 
-data SrcSpan = SS Pos Pos FilePath deriving (Show, Eq)
+data SrcSpan = SS Pos Pos FilePath deriving (Show, Ord, Eq)
 
+{-
 instance Ord SrcSpan where
   (SS p1 p2 fp) `compare` (SS p3 p4 fp')
-    = (fp `compare` fp') `mappend` (if p1 <= p3 && p2 >= p4 then LT else GT)
+    = (fp `compare` fp')
+        `mappend` (if p1 == p3 && p2 == p4 then EQ else
+                    (if p1 <= p3 && p2 >= p4 then LT else GT))
+                    -}
 
 
 -- The intermediate type we use
